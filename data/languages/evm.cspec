@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/compiler_spec.rxg -->
+
+<compiler_spec>
+  <data_organization>
+  </data_organization>
+  <readonly>
+    <range space="code"/>
+  </readonly>
+  <stackpointer register="SP" space="stk"/>
+  <default_proto>
+    <prototype name="solc" extrapop="0" stackshift="0">
+      <input>
+        <pentry minsize="1" maxsize="500" align="2">
+          <addr offset="2" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="500" align="2">
+          <addr offset="2" space="stack"/>
+        </pentry>
+      </output>
+      <unaffected>
+        <register name="SP"/>
+      </unaffected>
+    </prototype>
+  </default_proto>
+</compiler_spec>

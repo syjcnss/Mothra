@@ -4,17 +4,15 @@
 
 <language_definitions>
 <!-- Uncomment the following to make the language available in Ghidra -->
-<!-- 
-   <language processor="Skel"
-            endian="little"
-            size="16"
+<language processor="EVM"
+            endian="big"
+            size="64"
             variant="default"
             version="1.0"
-            slafile="skel.sla"
-            processorspec="skel.pspec"
-            id="skel:LE:16:default">
+            slafile="evm.sla"
+            processorspec="evm.pspec"
+            id="evm:64:default">
     <description>Skeleton Language Module</description>
-    <compiler name="default" spec="skel.cspec" id="default"/>
-  </language> 
--->
+    <compiler name="default" spec="evm.cspec" id="default"/>
+</language> 
 </language_definitions>
