@@ -5,10 +5,9 @@
 <spaces defaultspace="code">
 <space_other name="OTHER" index="1" bigendian="true" delay="0" size="8" physical="false"/>
 <space_unique name="unique" index="2" bigendian="true" delay="0" size="4" physical="true"/>
-<space name="ram" index="3" bigendian="true" delay="1" size="8" physical="true"/>
-<space name="code" index="4" bigendian="true" delay="1" size="2" physical="true"/>
-<space name="stk" index="5" bigendian="true" delay="1" size="2" wordsize="8" physical="true"/>
-<space name="register" index="6" bigendian="true" delay="0" size="2" physical="true"/>
+<space name="code" index="3" bigendian="true" delay="1" size="2" physical="true"/>
+<space name="stk" index="4" bigendian="true" delay="1" size="2" wordsize="8" physical="true"/>
+<space name="register" index="5" bigendian="true" delay="0" size="2" physical="true"/>
 </spaces>
 <symbol_table scopesize="33" symbolsize="154">
 <scope id="0x0" parent="0x0"/>

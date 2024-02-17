@@ -11,7 +11,7 @@ define alignment=1;
 # imaginary stack pointer
 
 # 64bit address space is enough for evm, https://github.com/ethereum/go-ethereum/blob/master/core/vm/instructions.go#L502
-define space ram      type=ram_space      size=8       wordsize=1;
+# define space ram      type=ram_space      size=8       wordsize=1;
 # EIP-170: Contract code size limit. MAX_CODE_SIZE: 0x6000
 define space code     type=ram_space      size=2       default wordsize=1;
 # hidden stack space, stack is limited to 1024 slots.

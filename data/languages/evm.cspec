@@ -5,6 +5,9 @@
 <compiler_spec>
   <data_organization>
   </data_organization>
+  <global>
+    <range space="code"/>
+  </global>
   <readonly>
     <range space="code"/>
   </readonly>
