@@ -81,54 +81,62 @@ define pcodeop _stop;
     push(r0);
 }
 
+define pcodeop _div;
 :DIV is op=0x04 {
     pop(r0);
     pop(r1);
-    r0 = r0 / r1;
+    r0 = _div(r0,r1);
     push(r0);
 }
 
+define pcodeop _sdiv;
 :SDIV is op=0x05 {
     pop(r0);
     pop(r1);
-    r0 = r0 s/ r1;
+    r0 = _sdiv(r0, r1);
     push(r0);
 }
 
+define pcodeop _mod;
 :MOD is op=0x06 {
     pop(r0);
     pop(r1);
-    r0 = r0 % r1;
+    r0 = _mod(r0, r1);
     push(r0);
 }
 
+define pcodeop _smod;
 :SMOD is op=0x07 {
     pop(r0);
     pop(r1);
-    r0 = r0 s% r1;
+    r0 = _smod(r0, r1);
     push(r0);
 }
 
+define pcodeop _addmod;
 :ADDMOD is op=0x08 {
     pop(r0);
     pop(r1);
     pop(r2);
-    r0 = (r0 + r1) % r2;
+    r0 = _addmod(r0, r1, r2);
     push(r0);
 }
 
+define pcodeop _mulmod;
 :MULMOD is op=0x09 {
     pop(r0);
     pop(r1);
     pop(r2);
-    r0 = (r0 * r1) % r2;
+    r0 = _mulmod(r0, r1, r2);
     push(r0);
 }
 
+define pcodeop _exp;
 :EXP is op=0x0a {
     pop(r0);
     pop(r1);
-    r0 = r0 ^ r1;
+    # r0 = r0 ^ r1;
+    r0 = _exp(r0, r1);
     push(r0);
 }
 
@@ -183,10 +191,11 @@ define pcodeop _signext;
     push(r0);
 }
 
+define pcodeop _and;
 :AND is op=0x16 {
     pop(r0);
     pop(r1);
-    r0 = r0 & r1;
+    r0 = _and(r0, r1);
     push(r0);
 }
 
