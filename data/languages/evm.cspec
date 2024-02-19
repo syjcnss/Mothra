@@ -13,20 +13,17 @@
   </readonly>
   <stackpointer register="SP" space="stk"/>
   <default_proto>
-    <prototype name="solc" extrapop="0" stackshift="0">
+    <prototype name="solc" extrapop="unknown" stackshift="1">
       <input>
-        <pentry minsize="1" maxsize="500" align="2">
-          <addr offset="2" space="stack"/>
+        <pentry minsize="8" maxsize="256">
+          <addr offset="1" space="stk"/>
         </pentry>
       </input>
       <output>
-        <pentry minsize="1" maxsize="500" align="2">
-          <addr offset="2" space="stack"/>
+        <pentry minsize="8" maxsize="256">
+          <addr offset="0" space="stk"/>
         </pentry>
       </output>
-      <unaffected>
-        <register name="SP"/>
-      </unaffected>
     </prototype>
   </default_proto>
 </compiler_spec>
