@@ -622,9 +622,10 @@ define pcodeop _gas;
 }
 
 
-
+define pcodeop _jump;
 :JUMP is op=0x56 {
     pop(r0);
+    _jump(r0);
     goto [r0];
 }
 
