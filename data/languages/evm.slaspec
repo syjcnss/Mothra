@@ -3,8 +3,6 @@
 # Other language modules (see Ghidra/Processors) may provide better examples
 # when creating a new language module.
 
-@define SIZE "8"
-
 define endian=big;
 define alignment=1;
 
@@ -14,18 +12,16 @@ define alignment=1;
 # define space ram      type=ram_space      size=8       wordsize=1;
 # EIP-170: Contract code size limit. MAX_CODE_SIZE: 0x6000
 define space code     type=ram_space      size=2       default wordsize=1;
-# hidden stack space, stack is limited to 1024 slots.
-define space stk      type=ram_space      size=2       wordsize=$(SIZE);
+# hidden stack space, stack is limited to 1024 slots. One uint32 takes 4 words, so 1024 * 4 = 4096 space is enough
+define space stk      type=ram_space      size=2       wordsize=8;
 
 define space register type=register_space size=2;
-define register offset=0x00 size=2   [SP PC];    # size has to match stk size
-define register offset=0x04 size=8   [r0 r1 r2 r3 r4 r5 r6 r7];
+define register offset=0x00 size=2    [SP PC];    # size has to match stk size
+define register offset=0x04 size=32   [r0 r1 r2 r3 r4 r5 r6 r7];
 
 ################################################################
 
-define token opcode (8)
-   op = (0,7)
-;
+define token opcode (8) op = (0,7);
 
 define token data8  (8)  imm8  = (0,7)  hex;
 define token data16 (16) imm16 = (0,15) hex;
@@ -41,13 +37,13 @@ define token data64_z (64) imm64_z = (0,63) hex;
 
 
 macro push(x) {
-	SP = SP - 1;
+	SP = SP - 4;
 	*[stk] SP = x;
 }
 
 macro pop(x) {
-	x = *[stk]:$(SIZE) SP;
-	SP = SP + 1;
+	x = *[stk] SP;
+	SP = SP + 4;
 }
 
 ################################################################
@@ -81,53 +77,47 @@ define pcodeop _stop;
     push(r0);
 }
 
-define pcodeop _div;
 :DIV is op=0x04 {
     pop(r0);
     pop(r1);
-    r0 = _div(r0,r1);
+    r0 = r0 / r1;
     push(r0);
 }
 
-define pcodeop _sdiv;
 :SDIV is op=0x05 {
     pop(r0);
     pop(r1);
-    r0 = _sdiv(r0, r1);
+    r0 = r0 s/ r1;
     push(r0);
 }
 
-define pcodeop _mod;
 :MOD is op=0x06 {
     pop(r0);
     pop(r1);
-    r0 = _mod(r0, r1);
+    r0 = r0 % r1;
     push(r0);
 }
 
-define pcodeop _smod;
 :SMOD is op=0x07 {
     pop(r0);
     pop(r1);
-    r0 = _smod(r0, r1);
+    r0 = r0 s% r1;
     push(r0);
 }
 
-define pcodeop _addmod;
 :ADDMOD is op=0x08 {
     pop(r0);
     pop(r1);
     pop(r2);
-    r0 = _addmod(r0, r1, r2);
+    r0 = (r0 + r1) % r2;
     push(r0);
 }
 
-define pcodeop _mulmod;
 :MULMOD is op=0x09 {
     pop(r0);
     pop(r1);
     pop(r2);
-    r0 = _mulmod(r0, r1, r2);
+    r0 = (r0 * r1) % r2;
     push(r0);
 }
 
@@ -191,11 +181,10 @@ define pcodeop _signext;
     push(r0);
 }
 
-define pcodeop _and;
 :AND is op=0x16 {
     pop(r0);
     pop(r1);
-    r0 = _and(r0, r1);
+    r0 = r0 & r1;
     push(r0);
 }
 
@@ -430,9 +419,8 @@ define pcodeop _basefee;
 ################################################################
 
 :POP is op=0x50 {
-    SP = SP + 1;
+    SP = SP + 4;
 }
-
 
 define pcodeop _mload;
 :MLOAD is op=0x51 {
@@ -487,145 +475,176 @@ define pcodeop _gas;
     push(r0);
 }
 
-################################################################
+# ################################################################
 
 :PUSH0 is op=0x5f {
-    push(0:$(SIZE));
+    r0 = 0;
+    push(r0);
 }
 
 :PUSH1 imm8 is op=0x60 ; imm8 {
-    push(imm8:$(SIZE));
+    r0 = imm8;
+    push(r0);
 }
 
 :PUSH2 imm16 is op=0x61 ; imm16 {
-    push(imm16:$(SIZE));
+    r0 = imm16;
+    push(r0);
 }
 
 :PUSH3 imm24 is op=0x62 ; imm24 {
-    push(imm24:$(SIZE));
+    r0 = imm24;
+    push(r0);
 }
 
 :PUSH4 imm32 is op=0x63 ; imm32 {
-    push(imm32:$(SIZE));
+    r0 = imm32;
+    push(r0);
 }
 
 :PUSH5 imm40 is op=0x64 ; imm40 {
-    push(imm40:$(SIZE));
+    r0 = imm40;
+    push(r0);
 }
 
 :PUSH6 imm48 is op=0x65 ; imm48 {
-    push(imm48:$(SIZE));
+    r0 = imm48;
+    push(r0);
 }
 
 :PUSH7 imm56 is op=0x66 ; imm56 {
-    push(imm56:$(SIZE));
+    r0 = imm56;
+    push(r0);
 }
 
 :PUSH8 imm64 is op=0x67 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm64;
+    push(r0);
 }
 
 :PUSH9 imm8, imm64 is op=0x68 ; imm8 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm8 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH10 imm16, imm64 is op=0x69 ; imm16 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm16 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH11 imm24, imm64 is op=0x6a ; imm24 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm24 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH12 imm32, imm64 is op=0x6b ; imm32 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm32 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH13 imm40, imm64 is op=0x6c ; imm40 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm40 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH14 imm48, imm64 is op=0x6d ; imm48 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm48 << 64 | imm64;
+    push(r0);
 }
 
 :PUSH15 imm56, imm64 is op=0x6e ; imm56 ; imm64 {
-    push(imm64:$(SIZE));
+    r0 = imm56 << 64 | imm64;
+    push(r0);
 }
 
-:PUSH16 imm64_x, imm64 is op=0x6f ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH16 imm64, imm64_z is op=0x6f ; imm64 ; imm64_z {
+    r0 = imm64 << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH17 imm8, imm64_x, imm64 is op=0x70 ; imm8 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH17 imm8, imm64_y, imm64_z is op=0x70 ; imm8 ; imm64_y ; imm64_z {
+    r0 = imm8 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH18 imm16, imm64_x, imm64 is op=0x71 ; imm16 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH18 imm16, imm64_y, imm64_z is op=0x71 ; imm16 ; imm64_y ; imm64_z {
+    r0 = imm16 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH19 imm24, imm64_x, imm64 is op=0x72 ; imm24 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH19 imm24, imm64_y, imm64_z is op=0x72 ; imm24 ; imm64_y ; imm64_z {
+    r0 = imm24 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH20 imm32, imm64_x, imm64 is op=0x73 ; imm32 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH20 imm32, imm64_y, imm64_z is op=0x73 ; imm32 ; imm64_y ; imm64_z {
+    r0 = imm32 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH21 imm40, imm64_x, imm64 is op=0x74 ; imm40 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH21 imm40, imm64_y, imm64_z is op=0x74 ; imm40 ; imm64_y ; imm64_z {
+    r0 = imm40 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH22 imm48, imm64_x, imm64 is op=0x75 ; imm48 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH22 imm48, imm64_y, imm64_z is op=0x75 ; imm48 ; imm64_y ; imm64_z {
+    r0 = imm48 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH23 imm56, imm64_x, imm64 is op=0x76 ; imm56 ; imm64_x ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH23 imm56, imm64_y, imm64_z is op=0x76 ; imm56 ; imm64_y ; imm64_z {
+    r0 = imm56 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH24 imm64_x, imm64_y, imm64 is op=0x77 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH24 imm64, imm64_y, imm64_z is op=0x77 ; imm64 ; imm64_y ; imm64_z {
+    r0 = imm64 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH25 imm8, imm64_x, imm64_y, imm64 is op=0x78 ; imm8 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH25 imm8, imm64_x, imm64_y, imm64_z is op=0x78 ; imm8 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm8 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH26 imm16, imm64_x, imm64_y, imm64 is op=0x79 ; imm16 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH26 imm16, imm64_x, imm64_y, imm64_z is op=0x79 ; imm16 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm16 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH27 imm24, imm64_x, imm64_y, imm64 is op=0x7a ; imm24 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH27 imm24, imm64_x, imm64_y, imm64_z is op=0x7a ; imm24 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm24 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH28 imm32, imm64_x, imm64_y, imm64 is op=0x7b ; imm32 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH28 imm32, imm64_x, imm64_y, imm64_z is op=0x7b ; imm32 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm32 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH29 imm40, imm64_x, imm64_y, imm64 is op=0x7c ; imm40 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH29 imm40, imm64_x, imm64_y, imm64_z is op=0x7c ; imm40 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm40 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH30 imm48, imm64_x, imm64_y, imm64 is op=0x7d ; imm48 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH30 imm48, imm64_x, imm64_y, imm64_z is op=0x7d ; imm48 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm48 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH31 imm56, imm64_x, imm64_y, imm64 is op=0x7e ; imm56 ; imm64_x ; imm64_y ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH31 imm56, imm64_x, imm64_y, imm64_z is op=0x7e ; imm56 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm56 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
-:PUSH32 imm64_x, imm64_y, imm64_z, imm64 is op=0x7f ; imm64_x ; imm64_y ; imm64_z ; imm64 {
-    push(imm64:$(SIZE));
+:PUSH32 imm64, imm64_x, imm64_y, imm64_z is op=0x7f ; imm64; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm64 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
 }
 
 
-define pcodeop _jump;
 :JUMP is op=0x56 {
     pop(r0);
-    _jump(r0);
     goto [r0];
 }
 
@@ -642,197 +661,197 @@ define pcodeop _jump;
 ################################################################
 
 :DUP1 is op=0x80 {
-    r0 = *[stk]:$(SIZE) SP;
+    r0 = *[stk] SP;
     push(r0);
 }
 
 :DUP2 is op=0x81 {
-    r0 = *[stk]:$(SIZE) SP+1;
+    r0 = *[stk] SP+4;
     push(r0);
 }
 
 :DUP3 is op=0x82 {
-    r0 = *[stk]:$(SIZE) SP+2;
+    r0 = *[stk] SP+8;
     push(r0);
 }
 
 :DUP4 is op=0x83 {
-    r0 = *[stk]:$(SIZE) SP+3;
+    r0 = *[stk] SP+12;
     push(r0);
 }
 
 :DUP5 is op=0x84 {
-    r0 = *[stk]:$(SIZE) SP+4;
+    r0 = *[stk] SP+16;
     push(r0);
 }
 
 :DUP6 is op=0x85 {
-    r0 = *[stk]:$(SIZE) SP+5;
+    r0 = *[stk] SP+20;
     push(r0);
 }
 
 :DUP7 is op=0x86 {
-    r0 = *[stk]:$(SIZE) SP+6;
+    r0 = *[stk] SP+24;
     push(r0);
 }
 
 :DUP8 is op=0x87 {
-    r0 = *[stk]:$(SIZE) SP+7;
+    r0 = *[stk] SP+28;
     push(r0);
 }
 
 :DUP9 is op=0x88 {
-    r0 = *[stk]:$(SIZE) SP+8;
+    r0 = *[stk] SP+32;
     push(r0);
 }
 
 :DUP10 is op=0x89 {
-    r0 = *[stk]:$(SIZE) SP+9;
+    r0 = *[stk] SP+36;
     push(r0);
 }
 
 :DUP11 is op=0x8a {
-    r0 = *[stk]:$(SIZE) SP+10;
+    r0 = *[stk] SP+40;
     push(r0);
 }
 
 :DUP12 is op=0x8b {
-    r0 = *[stk]:$(SIZE) SP+11;
+    r0 = *[stk] SP+44;
     push(r0);
 }
 
 :DUP13 is op=0x8c {
-    r0 = *[stk]:$(SIZE) SP+12;
+    r0 = *[stk] SP+48;
     push(r0);
 }
 
 :DUP14 is op=0x8d {
-    r0 = *[stk]:$(SIZE) SP+13;
+    r0 = *[stk] SP+52;
     push(r0);
 }
 
 :DUP15 is op=0x8e {
-    r0 = *[stk]:$(SIZE) SP+14;
+    r0 = *[stk] SP+56;
     push(r0);
 }
 
 :DUP16 is op=0x8f {
-    r0 = *[stk]:$(SIZE) SP+15;
+    r0 = *[stk] SP+60;
     push(r0);
 }
 
 ################################################################
 
 :SWAP1 is op=0x90 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-1;
-    *[stk]:$(SIZE) SP = r0;
-    *[stk]:$(SIZE) SP-1 = r1;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-4;
+    *[stk] SP = r0;
+    *[stk] SP-4 = r1;
 }
 
 :SWAP2 is op=0x91 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-2;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-2 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-8;
+    *[stk] SP = r1;
+    *[stk] SP-8 = r0;
 }
 
 :SWAP3 is op=0x92 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-3;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-3 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-12;
+    *[stk] SP = r1;
+    *[stk] SP-12 = r0;
 }
 
 :SWAP4 is op=0x93 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-4;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-4 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-16;
+    *[stk] SP = r1;
+    *[stk] SP-16 = r0;
 }
 
 :SWAP5 is op=0x94 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-5;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-5 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-20;
+    *[stk] SP = r1;
+    *[stk] SP-20 = r0;
 }
 
 :SWAP6 is op=0x95 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-6;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-6 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-24;
+    *[stk] SP = r1;
+    *[stk] SP-24 = r0;
 }
 
 :SWAP7 is op=0x96 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-7;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-7 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-28;
+    *[stk] SP = r1;
+    *[stk] SP-28 = r0;
 }
 
 :SWAP8 is op=0x97 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-8;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-8 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-32;
+    *[stk] SP = r1;
+    *[stk] SP-32 = r0;
 }
 
 :SWAP9 is op=0x98 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-9;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-9 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-36;
+    *[stk] SP = r1;
+    *[stk] SP-36 = r0;
 }
 
 :SWAP10 is op=0x99 {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-10;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-10 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-40;
+    *[stk] SP = r1;
+    *[stk] SP-40 = r0;
 }
 
 :SWAP11 is op=0x9a {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-11;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-11 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-44;
+    *[stk] SP = r1;
+    *[stk] SP-44 = r0;
 }
 
 :SWAP12 is op=0x9b {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-12;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-12 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-48;
+    *[stk] SP = r1;
+    *[stk] SP-48 = r0;
 }
 
 :SWAP13 is op=0x9c {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-13;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-13 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-52;
+    *[stk] SP = r1;
+    *[stk] SP-52 = r0;
 }
 
 :SWAP14 is op=0x9d {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-14;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-14 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-56;
+    *[stk] SP = r1;
+    *[stk] SP-56 = r0;
 }
 
 :SWAP15 is op=0x9e {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-15;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-15 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-60;
+    *[stk] SP = r1;
+    *[stk] SP-60 = r0;
 }
 
 :SWAP16 is op=0x9f {
-    r0 = *[stk]:$(SIZE) SP;
-    r1 = *[stk]:$(SIZE) SP-16;
-    *[stk]:$(SIZE) SP = r1;
-    *[stk]:$(SIZE) SP-16 = r0;
+    r0 = *[stk] SP;
+    r1 = *[stk] SP-64;
+    *[stk] SP = r1;
+    *[stk] SP-64 = r0;
 }
 
 

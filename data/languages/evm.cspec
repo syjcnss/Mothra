@@ -13,14 +13,14 @@
   </readonly>
   <stackpointer register="SP" space="stk" growth="negative" />
   <default_proto>
-    <prototype name="solc" extrapop="unknown" stackshift="1">
+    <prototype name="solc" extrapop="unknown" stackshift="0">
       <input>
-        <pentry minsize="8" maxsize="256">
-          <addr offset="1" space="stk"/>
+        <pentry minsize="32" maxsize="1024">
+          <addr offset="0" space="stk"/>
         </pentry>
       </input>
       <output>
-        <pentry minsize="8" maxsize="256">
+        <pentry minsize="32" maxsize="256">
           <addr offset="0" space="stk"/>
         </pentry>
       </output>
