@@ -3,5 +3,8 @@
 <!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/processor_spec.rxg -->
 
 <processor_spec>
-  <!-- <programcounter register="PC"/> -->
+  <programcounter register="PC"/>
+  <properties>
+    <property key="DisableAllAnalyzers" value="value ignored, just turns them off"/>
+  </properties>
 </processor_spec>

@@ -18,8 +18,8 @@ define space code     type=ram_space      size=2       default wordsize=1;
 define space stk      type=ram_space      size=2       wordsize=$(SIZE);
 
 define space register type=register_space size=2;
-define register offset=0x00 size=2   [SP];    # size has to match stk size
-define register offset=0x02 size=8   [r0 r1 r2 r3 r4 r5 r6 r7];
+define register offset=0x00 size=2   [SP PC];    # size has to match stk size
+define register offset=0x04 size=8   [r0 r1 r2 r3 r4 r5 r6 r7];
 
 ################################################################
 

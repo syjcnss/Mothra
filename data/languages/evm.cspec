@@ -3,7 +3,7 @@
 <!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/compiler_spec.rxg -->
 
 <compiler_spec>
-  <data_organization>
+<data_organization>
   </data_organization>
   <global>
     <range space="code"/>
@@ -11,7 +11,7 @@
   <readonly>
     <range space="code"/>
   </readonly>
-  <stackpointer register="SP" space="stk"/>
+  <stackpointer register="SP" space="stk" growth="negative" />
   <default_proto>
     <prototype name="solc" extrapop="unknown" stackshift="1">
       <input>
