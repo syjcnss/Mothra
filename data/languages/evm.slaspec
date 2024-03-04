@@ -744,131 +744,131 @@ define pcodeop _gas;
 
 :SWAP1 is op=0x90 {
     local p = SP + 4;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP2 is op=0x91 {
     local p = SP + 8;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP3 is op=0x92 {
     local p = SP + 12;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP4 is op=0x93 {
     local p = SP + 16;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP5 is op=0x94 {
     local p = SP + 20;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP6 is op=0x95 {
     local p = SP + 24;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP7 is op=0x96 {
     local p = SP + 28;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP8 is op=0x97 {
     local p = SP + 32;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP9 is op=0x98 {
     local p = SP + 36;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP10 is op=0x99 {
     local p = SP + 40;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP11 is op=0x9a {
     local p = SP + 44;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP12 is op=0x9b {
     local p = SP + 48;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP13 is op=0x9c {
     local p = SP + 52;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP14 is op=0x9d {
     local p = SP + 56;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 :SWAP15 is op=0x9e {
     local p = SP + 60;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 
 :SWAP16 is op=0x9f {
     local p = SP + 64;
-    r0 = *[stk] SP;
+    pop(r0);
     r1 = *[stk] p;
     *[stk] p = r0;
-    *[stk] SP = r1;
+    push(r1);
 }
 
 
