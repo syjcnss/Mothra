@@ -46,13 +46,19 @@ macro pop(x) {
 	SP = SP + 4;
 }
 
+macro halt() {
+	<loop>
+	  SP = SP;
+	  goto <loop>;
+}
+
 ################################################################
 
 
 define pcodeop _stop;
 :STOP is op=0x00 {
     _stop();
-    return [0:1];
+    halt();
 }
 
 
@@ -961,7 +967,7 @@ define pcodeop _return;
     pop(r0);
     pop(r1);
     _return(r0, r1);
-    return [0:1];
+    halt();
 }
 
 define pcodeop _delegatecall;
@@ -999,12 +1005,12 @@ define pcodeop _revert;
     pop(r0);
     pop(r1);
     _revert(r0, r1);
-    return [1:1];
+    halt();
 }
 
 define pcodeop _selfdestruct;
 :SELFDESTRUCT is op=0xff {
     pop(r0);
     _selfdestruct(r0);
-    return [0:1];
+    halt();
 }
