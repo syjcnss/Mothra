@@ -12,18 +12,60 @@
     <range space="code"/>
   </readonly>
   <stackpointer register="SP" space="stk" growth="negative" />
+
   <default_proto>
-    <prototype name="solc" extrapop="unknown" stackshift="0">
+    <prototype name="solc" extrapop="unknown" stackshift="4">
       <input>
-        <pentry minsize="32" maxsize="1024">
+        <!-- <pentry minsize="32" maxsize="1024">
           <addr offset="0" space="stk"/>
-        </pentry>
+        </pentry> -->
       </input>
       <output>
-        <pentry minsize="32" maxsize="256">
+        <pentry minsize="1" maxsize="256">
           <addr offset="0" space="stk"/>
         </pentry>
       </output>
     </prototype>
   </default_proto>
+  <!-- <prototype name="solc_1_0" extrapop="0" stackshift="4">
+      <returnaddress>
+        <varnode space="stack" offset="0" size="32"/>
+      </returnaddress>
+      <input>
+      </input>
+      <output>
+        <pentry minsize="32" maxsize="32">
+          <addr space="stack" offset="0"/>
+        </pentry>
+      </output>
+  </prototype>
+
+  <prototype name="solc_0_1" extrapop="8" stackshift="8">
+      <returnaddress>
+        <varnode space="stack" offset="4" size="32"/>
+      </returnaddress>
+      <input>
+        <pentry minsize="32" maxsize="32">
+          <addr offset="0" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+      </output>
+  </prototype>
+
+  <prototype name="solc_1_1" extrapop="4" stackshift="8">
+      <returnaddress>
+        <varnode space="stack" offset="0x20" size="32"/>
+      </returnaddress>
+      <input>
+        <pentry minsize="32" maxsize="32">
+          <addr offset="0" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="32" maxsize="32">
+          <addr offset="0x20" space="stack"/>
+        </pentry>
+      </output>
+  </prototype> -->
 </compiler_spec>

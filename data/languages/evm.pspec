@@ -4,8 +4,13 @@
 
 <processor_spec>
   <programcounter register="PC"/>
+  <default_symbols>
+    <symbol name="entry" address="code:0x0000" type="code" entry="true"/>
+  </default_symbols>
   <properties>
     <property key="DisableAllAnalyzers" value="value ignored, just turns them off"/>
     <property key="Analyzers.Basic Constant Reference Analyzer" value="true"/>
+    <property key="Analyzers.EVM Disassembler" value="true"/>
+    <property key="Analyzers.EVM Function Analyzer" value="true"/>
   </properties>
 </processor_spec>
