@@ -4,3 +4,7 @@ build/*
 .gradle/*
 dist/*
 *.class
+.project
+.classpath
+.antProperties.xml
+bin/ghidrevm
