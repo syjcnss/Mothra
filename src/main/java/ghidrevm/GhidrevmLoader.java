@@ -39,7 +39,6 @@ import ghidra.program.model.mem.MemoryBlock;
  */
 public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 	
-	boolean isByteCode = false;
 	boolean isHexCode = false;
 
 	@Override
@@ -53,17 +52,12 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 		
 		byte[] data = provider.readBytes(0, provider.length());
 		String seq = new String(data, "UTF-8");
-		
-		this.isByteCode = seq.matches("^[01]+$");
 		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
+
+		LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
+		LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
+		loadSpecs.add(loadSpec);
 		
-		if(this.isByteCode || this.isHexCode) {
-			LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
-			LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
-			loadSpecs.add(loadSpec);
-		} else {
-			System.out.println(seq);
-		}
 		return loadSpecs;
 	}
 
@@ -80,15 +74,7 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 			CharSequence seq = new String(data, "UTF-8");
 			
 			try {
-				if(this.isByteCode) {
-					MemoryBlock block = flatAPI.createMemoryBlock("code", addr, data, false);
-
-					block.setRead(true);
-					block.setWrite(false);
-					block.setExecute(true);
-					
-					flatAPI.addEntryPoint(addr);
-				} else if(this.isHexCode) {
+				if(this.isHexCode) {
 					Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
 					Matcher m = p.matcher(seq);
 
@@ -108,6 +94,13 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 					block.setWrite(false);
 					block.setExecute(true);
 
+					flatAPI.addEntryPoint(addr);
+				} else {
+					MemoryBlock block = flatAPI.createMemoryBlock("code", addr, data, false);
+					block.setRead(true);
+					block.setWrite(false);
+					block.setExecute(true);
+					
 					flatAPI.addEntryPoint(addr);
 				}
 			} catch(Exception e) {
