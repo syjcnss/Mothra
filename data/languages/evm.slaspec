@@ -663,6 +663,12 @@ define pcodeop _gas;
 
 :JUMPDEST is op=0x5b { }
 
+define pcodeop _tload;
+:TLOAD  is op=0x5c {
+    pop(r0);
+    r0 = _tload(r0);
+    push(r0);
+}
 
 ################################################################
 
