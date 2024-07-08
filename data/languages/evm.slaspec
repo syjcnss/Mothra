@@ -670,6 +670,12 @@ define pcodeop _tload;
     push(r0);
 }
 
+define pcodeop _tstore;
+:TSTORE is op=0x5d {
+    pop(r0);
+    pop(r1);
+    _tstore(r0, r1);
+}
 ################################################################
 
 :DUP1 is op=0x80 {
