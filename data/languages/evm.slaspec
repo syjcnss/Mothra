@@ -676,6 +676,15 @@ define pcodeop _tstore;
     pop(r1);
     _tstore(r0, r1);
 }
+
+define pcodeop _mcopy;
+:MCOPY is op=0x5e {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _mcopy(r0, r1, r2);
+}
+
 ################################################################
 
 :DUP1 is op=0x80 {
