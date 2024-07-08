@@ -40,7 +40,7 @@ import ghidra.program.model.mem.MemoryBlock;
 public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 	
 	boolean isHexCode = false;
-	Integer contractSizeLimit = 24576;
+	Integer contractSizeLimit = 24576 * 2;
 
 	@Override
 	public String getName() {
@@ -54,8 +54,8 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 		byte[] data = provider.readBytes(0, provider.length());
 		String seq = new String(data, "UTF-8");
 		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
-		
-		if((!this.isHexCode && provider.length() <= contractSizeLimit * 8) || (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
+
+		if((!this.isHexCode && provider.length() <= contractSizeLimit) || (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
 			LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
 			LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
 			loadSpecs.add(loadSpec);
@@ -75,42 +75,38 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 			Address addr = flatAPI.toAddr(0x0);
 			byte[] data = provider.readBytes(0, provider.length());
 			CharSequence seq = new String(data, "UTF-8");
-			
-			try {
-				if(this.isHexCode) {
-					Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
-					Matcher m = p.matcher(seq);
 
-					int count = (int) m.results().count() + 1;
-					m.reset();
+			MemoryBlock block;
 
-					byte[] byte_code = new byte[count];
+			if(this.isHexCode) {
+				Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
+				Matcher m = p.matcher(seq);
 
-					int i = 0;
-					while(m.find()) {
-						String hex_digit = m.group();
-						byte_code[i++] = (byte)Integer.parseInt(hex_digit, 16);
-					}
-					MemoryBlock block = flatAPI.createMemoryBlock("code", addr, byte_code, false);
+				int count = (int) m.results().count() + 1;
+				m.reset();
 
-					block.setRead(true);
-					block.setWrite(false);
-					block.setExecute(true);
+				byte[] byte_code = new byte[count];
 
-					flatAPI.addEntryPoint(addr);
-				} else {
-					MemoryBlock block = flatAPI.createMemoryBlock("code", addr, data, false);
-					block.setRead(true);
-					block.setWrite(false);
-					block.setExecute(true);
-					
-					flatAPI.addEntryPoint(addr);
+				int i = 0;
+				while(m.find()) {
+					String hex_digit = m.group();
+					byte_code[i++] = (byte) Integer.parseInt(hex_digit, 16);
 				}
+				data = byte_code;
+			}
+
+			try {
+				block = flatAPI.createMemoryBlock("code", addr, data, false);
+
+				block.setRead(true);
+				block.setWrite(false);
+				block.setExecute(true);
+
+				flatAPI.addEntryPoint(addr);
 			} catch(Exception e) {
 				e.printStackTrace();
 				throw new IOException("EVM Code: Fail Loading...");
 			}
-
 			monitor.setMessage("EVM Code: End Loading...");
 	}
 
