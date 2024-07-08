@@ -1029,6 +1029,12 @@ define pcodeop _revert;
     halt();
 }
 
+define pcodeop _invalid;
+:INVALID is op=0xfe {
+	_invalid();
+	halt();
+}
+
 define pcodeop _selfdestruct;
 :SELFDESTRUCT is op=0xff {
     pop(r0);
