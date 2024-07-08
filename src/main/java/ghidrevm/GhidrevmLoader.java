@@ -40,6 +40,7 @@ import ghidra.program.model.mem.MemoryBlock;
 public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 	
 	boolean isHexCode = false;
+	Integer contractSizeLimit = 24576;
 
 	@Override
 	public String getName() {
@@ -53,11 +54,13 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 		byte[] data = provider.readBytes(0, provider.length());
 		String seq = new String(data, "UTF-8");
 		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
-
-		LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
-		LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
-		loadSpecs.add(loadSpec);
 		
+		if((!this.isHexCode && provider.length() <= contractSizeLimit * 8) || (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
+			LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
+			LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
+			loadSpecs.add(loadSpec);
+		}
+
 		return loadSpecs;
 	}
 
