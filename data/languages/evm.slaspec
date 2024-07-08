@@ -429,6 +429,12 @@ define pcodeop _blobhash;
 	push(r0);
 }
 
+define pcodeop _blobbasefee;
+:BLOBBASEFEE is op=0x4a {
+	r0 = _blobbasefee();
+	push(r0);
+}
+
 ################################################################
 
 :POP is op=0x50 {
