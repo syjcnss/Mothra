@@ -52,7 +52,7 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 		List<LoadSpec> loadSpecs = new ArrayList<>();
 		
 		byte[] data = provider.readBytes(0, provider.length());
-		String seq = new String(data, "UTF-8");
+		String seq = new String(data, "UTF-8").strip();
 		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
 
 		if((!this.isHexCode && provider.length() <= contractSizeLimit) || (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
@@ -82,7 +82,7 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 				Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
 				Matcher m = p.matcher(seq);
 
-				int count = (int) m.results().count() + 1;
+				int count = (int) m.results().count();
 				m.reset();
 
 				byte[] byte_code = new byte[count];
