@@ -422,6 +422,19 @@ define pcodeop _basefee;
     push(r0);
 }
 
+define pcodeop _blobhash;
+:BLOBHASH is op=0x49 {
+	pop(r0);
+	r0 = _blobhash(r0);
+	push(r0);
+}
+
+define pcodeop _blobbasefee;
+:BLOBBASEFEE is op=0x4a {
+	r0 = _blobbasefee();
+	push(r0);
+}
+
 ################################################################
 
 :POP is op=0x50 {
@@ -663,6 +676,27 @@ define pcodeop _gas;
 
 :JUMPDEST is op=0x5b { }
 
+define pcodeop _tload;
+:TLOAD  is op=0x5c {
+    pop(r0);
+    r0 = _tload(r0);
+    push(r0);
+}
+
+define pcodeop _tstore;
+:TSTORE is op=0x5d {
+    pop(r0);
+    pop(r1);
+    _tstore(r0, r1);
+}
+
+define pcodeop _mcopy;
+:MCOPY is op=0x5e {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _mcopy(r0, r1, r2);
+}
 
 ################################################################
 
@@ -1006,6 +1040,12 @@ define pcodeop _revert;
     pop(r1);
     _revert(r0, r1);
     halt();
+}
+
+define pcodeop _invalid;
+:INVALID is op=0xfe {
+	_invalid();
+	halt();
 }
 
 define pcodeop _selfdestruct;
