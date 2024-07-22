@@ -52,11 +52,15 @@ repositories {
 	// dropped into the lib/ directory.
 	// See https://docs.gradle.org/current/userguide/declaring_repositories.html for more info.
 	// Ex: mavenCentral()
+	mavenCentral()
 }
 
 dependencies {
 	// Any external dependencies added here will automatically be copied to the lib/ directory when
 	// this extension is built.	
+	// https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformats-cbor
+	implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.17.2'
+	implementation 'org.bitcoinj:bitcoinj-core:0.12'
 }
 
 // Exclude additional files from the built extension
