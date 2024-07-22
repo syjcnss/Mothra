@@ -31,8 +31,11 @@ import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.util.exception.CancelledException;
 import ghidra.util.task.TaskMonitor;
+import ghidrevm.evm.MetadataObj;
+import ghidrevm.evm.CborDecoder;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.mem.MemoryBlock;
+import ghidra.framework.options.Options;
 
 /**
  * TODO: Provide class-level documentation that describes what this loader does.
@@ -107,6 +110,33 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 				e.printStackTrace();
 				throw new IOException("EVM Code: Fail Loading...");
 			}
+
+			try {
+				// Metadata Decode
+				MetadataObj metadata = new MetadataObj(data);
+				metadata.decodeMetadata();
+
+				// Metadata Configuration
+				Options props = program.getOptions(program.PROGRAM_INFO);
+
+				program.setCompiler(metadata.getSolcVersion());
+				props.setString("Solc Version", metadata.getSolcVersion());
+				props.setString("IPFS Hash", metadata.getIpfs());
+				props.setString("bzzr0", metadata.getBzzr0());
+				props.setString("bzzr1", metadata.getBzzr1());
+
+				new CborDecoder(flatAPI, metadata.getStartIndex(), metadata.getMetadataByteCode());
+				
+				Address a = flatAPI.toAddr(data.length-2);
+				flatAPI.createWord(a);
+				flatAPI.setEOLComment(a, "Metadata Length");
+				
+			} catch(Exception e) {
+				e.printStackTrace();
+				throw new IOException("EVM Code: Metadata Decode Fails...");
+			}
+
+			// End Loading
 			monitor.setMessage("EVM Code: End Loading...");
 	}
 
