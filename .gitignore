@@ -8,3 +8,4 @@ dist/*
 .classpath
 .antProperties.xml
 bin/ghidrevm
+lib/
