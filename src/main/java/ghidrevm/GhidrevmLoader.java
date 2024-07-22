@@ -41,7 +41,7 @@ import ghidra.framework.options.Options;
  * TODO: Provide class-level documentation that describes what this loader does.
  */
 public class GhidrevmLoader extends AbstractProgramWrapperLoader {
-	
+
 	boolean isHexCode = false;
 	Integer contractSizeLimit = 24576 * 2;
 
@@ -53,12 +53,13 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 	@Override
 	public Collection<LoadSpec> findSupportedLoadSpecs(ByteProvider provider) throws IOException {
 		List<LoadSpec> loadSpecs = new ArrayList<>();
-		
+
 		byte[] data = provider.readBytes(0, provider.length());
 		String seq = new String(data, "UTF-8").strip();
 		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
 
-		if((!this.isHexCode && provider.length() <= contractSizeLimit) || (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
+		if ((!this.isHexCode && provider.length() <= contractSizeLimit)
+				|| (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
 			LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
 			LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
 			loadSpecs.add(loadSpec);
@@ -69,82 +70,81 @@ public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 
 	@Override
 	protected void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
-		Program program, TaskMonitor monitor, MessageLog log)
-		throws CancelledException, IOException {
-		
-			monitor.setMessage("EVM: Start Loading...");
-			FlatProgramAPI flatAPI = new FlatProgramAPI(program);
-		
-			Address addr = flatAPI.toAddr(0x0);
-			byte[] data = provider.readBytes(0, provider.length());
-			CharSequence seq = new String(data, "UTF-8");
+			Program program, TaskMonitor monitor, MessageLog log)
+			throws CancelledException, IOException {
 
-			MemoryBlock block;
+		monitor.setMessage("EVM: Start Loading...");
+		FlatProgramAPI flatAPI = new FlatProgramAPI(program);
 
-			if(this.isHexCode) {
-				Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
-				Matcher m = p.matcher(seq);
+		Address addr = flatAPI.toAddr(0x0);
+		byte[] data = provider.readBytes(0, provider.length());
+		CharSequence seq = new String(data, "UTF-8");
 
-				int count = (int) m.results().count();
-				m.reset();
+		MemoryBlock block;
 
-				byte[] byte_code = new byte[count];
+		if (this.isHexCode) {
+			Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
+			Matcher m = p.matcher(seq);
 
-				int i = 0;
-				while(m.find()) {
-					String hex_digit = m.group();
-					byte_code[i++] = (byte) Integer.parseInt(hex_digit, 16);
-				}
-				data = byte_code;
+			int count = (int) m.results().count();
+			m.reset();
+
+			byte[] byte_code = new byte[count];
+
+			int i = 0;
+			while (m.find()) {
+				String hex_digit = m.group();
+				byte_code[i++] = (byte) Integer.parseInt(hex_digit, 16);
 			}
+			data = byte_code;
+		}
 
-			try {
-				block = flatAPI.createMemoryBlock("code", addr, data, false);
+		try {
+			block = flatAPI.createMemoryBlock("code", addr, data, false);
 
-				block.setRead(true);
-				block.setWrite(false);
-				block.setExecute(true);
+			block.setRead(true);
+			block.setWrite(false);
+			block.setExecute(true);
 
-				flatAPI.addEntryPoint(addr);
-			} catch(Exception e) {
-				e.printStackTrace();
-				throw new IOException("EVM Code: Fail Loading...");
-			}
+			flatAPI.addEntryPoint(addr);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new IOException("EVM Code: Fail Loading...");
+		}
 
-			try {
-				// Metadata Decode
-				MetadataObj metadata = new MetadataObj(data);
-				metadata.decodeMetadata();
+		try {
+			// Metadata Decode
+			MetadataObj metadata = new MetadataObj(data);
+			metadata.decodeMetadata();
 
-				// Metadata Configuration
-				Options props = program.getOptions(program.PROGRAM_INFO);
+			// Metadata Configuration
+			Options props = program.getOptions(program.PROGRAM_INFO);
 
-				program.setCompiler(metadata.getSolcVersion());
-				props.setString("Solc Version", metadata.getSolcVersion());
-				props.setString("IPFS Hash", metadata.getIpfs());
-				props.setString("bzzr0", metadata.getBzzr0());
-				props.setString("bzzr1", metadata.getBzzr1());
+			program.setCompiler(metadata.getSolcVersion());
+			props.setString("Solc Version", metadata.getSolcVersion());
+			props.setString("IPFS Hash", metadata.getIpfs());
+			props.setString("bzzr0", metadata.getBzzr0());
+			props.setString("bzzr1", metadata.getBzzr1());
 
-				new CborDecoder(flatAPI, metadata.getStartIndex(), metadata.getMetadataByteCode());
-				
-				Address a = flatAPI.toAddr(data.length-2);
-				flatAPI.createWord(a);
-				flatAPI.setEOLComment(a, "Metadata Length");
-				
-			} catch(Exception e) {
-				e.printStackTrace();
-				throw new IOException("EVM Code: Metadata Decode Fails...");
-			}
+			new CborDecoder(flatAPI, metadata.getStartIndex(), metadata.getMetadataByteCode());
 
-			// End Loading
-			monitor.setMessage("EVM Code: End Loading...");
+			Address a = flatAPI.toAddr(data.length - 2);
+			flatAPI.createWord(a);
+			flatAPI.setEOLComment(a, "Metadata Length");
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new IOException("EVM Code: Metadata Decode Fails...");
+		}
+
+		// End Loading
+		monitor.setMessage("EVM Code: End Loading...");
 	}
 
 	@Override
 	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
 			DomainObject domainObject, boolean isLoadIntoProgram) {
-		List<Option> list =
-			super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram);
+		List<Option> list = super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram);
 
 		return list;
 	}
