@@ -251,5 +251,60 @@ public class GhidrevmPlugin extends Plugin
 	    dialog.setLocationRelativeTo(tool.getToolFrame());
 	    dialog.setVisible(true);
 	}
+	private void loadBytecode(String bytecode, String filename) {
+        // Clean and prepare the bytecode and filename
+        String cleanedBytecode = removePrefix(bytecode, "0x");
+        String fullFilename = appendSuffix(filename, ".evm");
+	    try {
+	        // Set up the loader and load specification
+	        GhidrevmLoader loader = new GhidrevmLoader();
+	        LoadSpec loadSpec = configureLoadSpec(loader, "evm:256:default", "default");
+
+	        // Load the bytecode using the custom loader
+	        loadAndSaveBytecode(cleanedBytecode, fullFilename, loadSpec);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	}
+
+	private String removePrefix(String input, String prefix) {
+	    return input.startsWith(prefix) ? input.substring(prefix.length()) : input;
+	}
+
+	private String appendSuffix(String input, String suffix) {
+	    return input.endsWith(suffix) ? input : input + suffix;
+	}
+
+	private LoadSpec configureLoadSpec(GhidrevmLoader loader, String languageSpec, String compilerSpecId) {
+	    LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair(languageSpec, compilerSpecId);
+	    return new LoadSpec(loader, 0, compilerSpec, true);
+	}
+
+	private void loadAndSaveBytecode(String bytecode, String filename, LoadSpec loadSpec) throws Exception {
+	    ByteProvider provider = new ByteArrayProvider(hexStringToByteArray(bytecode));
+	    Project project = AppInfo.getActiveProject();
+	    Object consumer = new Object();
+	    TaskMonitor monitor = new ConsoleTaskMonitor();
+
+	    LoadResults<? extends DomainObject> results = loadSpec.getLoader().load(provider, filename, project, "", loadSpec, new ArrayList<>(), new MessageLog(), consumer, monitor);
+
+	    // Save the loading results to the project
+	    results.save(project, consumer, null, monitor);
+	}
+	
+	private byte[] hexStringToByteArray(String hexString) {
+	    Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
+	    Matcher m = p.matcher(hexString);
+
+	    int count = (int) m.results().count();
+	    m.reset();
+
+	    byte[] byteCode = new byte[count];
+	    int i = 0;
+	    while (m.find()) {
+	        String hexDigit = m.group();
+	        byteCode[i++] = (byte) Integer.parseInt(hexDigit, 16);
+	    }
+	    return byteCode;
 	}
 }
