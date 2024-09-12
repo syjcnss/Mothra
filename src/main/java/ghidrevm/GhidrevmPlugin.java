@@ -71,11 +71,12 @@ import ghidra.util.task.TaskMonitor;
 
 //@formatter:off
 @PluginInfo(
-	status = PluginStatus.STABLE,
-	packageName = ExamplesPluginPackage.NAME,
-	category = PluginCategoryNames.EXAMPLES,
-	shortDescription = "Plugin short description goes here.",
-	description = "Plugin long description goes here."
+    status = PluginStatus.RELEASED,
+    packageName = CorePluginPackage.NAME,
+    category = PluginCategoryNames.COMMON,
+    shortDescription = "Import External Files Through Address or Bytecode",
+    description = "This plugin allows the import of external files into the project, providing extended functionality for handling different types of data.",
+    eventsConsumed = { ProgramActivatedPluginEvent.class }
 )
 //@formatter:on
 public class GhidrevmPlugin extends ProgramPlugin {
