@@ -117,7 +117,7 @@ public class GhidrevmPlugin extends Plugin
 				"Perform simple unpack when any packed DB file is imported");
 		}
 
-	// TODO: If provider is desired, it is recommended to move it to its own file
+		setupDownloadBytecodeAction();
 	}
 
 	@Override
@@ -145,19 +145,20 @@ public class GhidrevmPlugin extends Plugin
 		}
 	}
 
-		// TODO: Customize actions
-		private void createActions() {
-			action = new DockingAction("My Action", getName()) {
-				@Override
-				public void actionPerformed(ActionContext context) {
-					Msg.showInfo(getClass(), panel, "Custom Action", "Hello!");
-				}
-			};
-			action.setToolBarData(new ToolBarData(Icons.ADD_ICON, null));
-			action.setEnabled(true);
-			action.markHelpUnnecessary();
-			dockingTool.addLocalAction(this, action);
-		}
+	private void setupDownloadBytecodeAction() {
+		downloadBytecodeAction = new DockingAction("Download ByteCode", getName()) {
+            @Override
+            public void actionPerformed(ActionContext context) {
+            	showDownloadBytecodeDialog();
+            }
+        };
+        downloadBytecodeAction.setMenuBarData(new MenuData(new String[] { "&File", "Download ByteCode" }, null,
+                "Import", MenuData.NO_MNEMONIC, "1"));
+        downloadBytecodeAction.setKeyBindingData(null);
+        downloadBytecodeAction.setEnabled(true);
+        downloadBytecodeAction.markHelpUnnecessary();
+        tool.addAction(downloadBytecodeAction);
+	}
 
 	@Override
 	public void projectClosed(Project project) {
@@ -167,6 +168,80 @@ public class GhidrevmPlugin extends Plugin
 	@Override
 	public void projectOpened(Project project) {
 		// No-ops
+	}
+	
+	private void showDownloadBytecodeDialog() {
+	    JDialog dialog = createDialog("Download ByteCode");
+
+	    // Create the necessary input components
+	    JComboBox<String> networkOptionsComboBox = createNetworkOptionsComboBox();
+	    JTextArea filenameTextArea = createTextArea(1, 5);
+	    JTextArea fetchBytecodeOptionTextArea = createTextArea(20, 50);
+
+	    // Set up the main content
+	    setupMainContent(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+
+	    // Set up the buttons and their actions
+	    setupButtonsAndActions(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+
+	    // Finalize the dialog setup
+	    finalizeDialog(dialog);
+	}
+
+	private JDialog createDialog(String title) {
+	    JDialog dialog = new JDialog(tool.getToolFrame(), title, true);
+	    dialog.setLayout(new BorderLayout());
+	    return dialog;
+	}
+
+	private JComboBox<String> createNetworkOptionsComboBox() {
+	    String[] networkOptions = {"Ethereum", "Polygon", "Arbitrum", "Optimism", "More"};
+	    JComboBox<String> comboBox = new JComboBox<>(networkOptions);
+	    comboBox.setEditable(true);
+	    return comboBox;
+	}
+
+	private JTextArea createTextArea(int rows, int columns) {
+	    JTextArea textArea = new JTextArea(rows, columns);
+	    textArea.setWrapStyleWord(true);
+	    textArea.setLineWrap(true);
+	    return textArea;
+	}
+
+	private void setupMainContent(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea, JTextArea fetchBytecodeOptionTextArea) {
+	    JPanel mainPanel = new JPanel(new BorderLayout());
+
+	    mainPanel.add(createPanel("Network", networkOptionsComboBox), BorderLayout.NORTH);
+	    mainPanel.add(createPanel("File Name", new JScrollPane(filenameTextArea)), BorderLayout.CENTER);
+	    mainPanel.add(createPanel("Deployed Bytecode / Contract Address", new JScrollPane(fetchBytecodeOptionTextArea)), BorderLayout.SOUTH);
+
+	    dialog.add(mainPanel, BorderLayout.CENTER);
+	}
+
+	private JPanel createPanel(String labelText, JComponent component) {
+	    JPanel panel = new JPanel(new BorderLayout());
+	    JLabel label = new JLabel(labelText);
+	    panel.add(label, BorderLayout.NORTH);
+	    panel.add(component, BorderLayout.CENTER);
+	    return panel;
+	}
+
+	private void setupButtonsAndActions(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea, JTextArea fetchBytecodeOptionTextArea) {
+	    JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+	    JButton loadByBytecodeButton = new JButton("By Bytecode");
+	    JButton loadByAddressButton = new JButton("By Address");
+
+	    buttonPanel.add(loadByBytecodeButton);
+	    buttonPanel.add(loadByAddressButton);
+	    dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+	}
+	}
+
+	private void finalizeDialog(JDialog dialog) {
+	    dialog.pack();
+	    dialog.setLocationRelativeTo(tool.getToolFrame());
+	    dialog.setVisible(true);
 	}
 	}
 }
