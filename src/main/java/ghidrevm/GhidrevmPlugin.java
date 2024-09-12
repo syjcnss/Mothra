@@ -251,6 +251,32 @@ public class GhidrevmPlugin extends Plugin
 	    dialog.setLocationRelativeTo(tool.getToolFrame());
 	    dialog.setVisible(true);
 	}
+	
+	private void fetchContractBytecode(String rpcEndpoint, String contractAddress, String filename) {
+		// Set up the web3j service
+		String errorTitle = "Failed to fetch bytecode";
+		String errorMessage = "The fetched bytecode is null or empty. Please check the contract address and try again.";
+        Web3j web3j = Web3j.build(new HttpService(rpcEndpoint));
+
+        try {
+        	// Fetch the contract bytecode.
+            EthGetCode ethGetCode = web3j.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST).send();
+            String bytecode = ethGetCode.getCode();
+            
+            if (bytecode == null || bytecode.isEmpty())
+                showErrorPopup(errorTitle, errorMessage);
+            else
+                loadBytecode(bytecode, filename);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            showErrorPopup(errorTitle, errorMessage);
+        }
+    }
+	
+	private void showErrorPopup(String title, String message) {
+	    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+	}
 	private void loadBytecode(String bytecode, String filename) {
         // Clean and prepare the bytecode and filename
         String cleanedBytecode = removePrefix(bytecode, "0x");
