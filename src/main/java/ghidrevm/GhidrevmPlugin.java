@@ -16,25 +16,59 @@
 package ghidrevm;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import javax.swing.*;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.response.EthGetCode;
+import org.web3j.protocol.http.HttpService;
 
 import docking.ActionContext;
-import docking.ComponentProvider;
 import docking.action.DockingAction;
-import docking.action.ToolBarData;
-import ghidra.app.ExamplesPluginPackage;
+import docking.action.MenuData;
+import docking.tool.ToolConstants;
+import docking.widgets.filechooser.GhidraFileChooser;
+import ghidra.app.CorePluginPackage;
+import ghidra.app.events.ProgramActivatedPluginEvent;
 import ghidra.app.plugin.PluginCategoryNames;
-import ghidra.app.plugin.ProgramPlugin;
-import ghidra.framework.plugintool.*;
+import ghidra.app.util.bin.ByteArrayProvider;
+import ghidra.app.util.bin.ByteProvider;
+import ghidra.app.util.importer.MessageLog;
+import ghidra.app.util.opinion.LoadResults;
+import ghidra.app.util.opinion.LoadSpec;
+import ghidra.framework.main.AppInfo;
+import ghidra.framework.main.ApplicationLevelPlugin;
+import ghidra.framework.main.FrontEndService;
+import ghidra.framework.model.DomainObject;
+import ghidra.framework.model.Project;
+import ghidra.framework.model.ProjectListener;
+import ghidra.framework.options.ToolOptions;
+import ghidra.framework.plugintool.Plugin;
+import ghidra.framework.plugintool.PluginEvent;
+import ghidra.framework.plugintool.PluginInfo;
+import ghidra.framework.plugintool.PluginTool;
 import ghidra.framework.plugintool.util.PluginStatus;
+import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.util.HelpLocation;
-import ghidra.util.Msg;
-import resources.Icons;
+import ghidra.util.task.ConsoleTaskMonitor;
+import ghidra.util.task.TaskMonitor;
 
-/**
- * TODO: Provide class-level documentation that describes what this plugin does.
- */
 //@formatter:off
 @PluginInfo(
 	status = PluginStatus.STABLE,
