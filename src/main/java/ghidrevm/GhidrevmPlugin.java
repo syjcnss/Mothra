@@ -91,15 +91,6 @@ public class GhidrevmPlugin extends Plugin
 
 	public GhidrevmPlugin(PluginTool tool) {
 		super(tool);
-
-		// TODO: Customize provider (or remove if a provider is not desired)
-		String pluginName = getName();
-		provider = new MyProvider(this, pluginName);
-
-		// TODO: Customize help (or remove if help is not desired)
-		String topicName = this.getClass().getPackage().getName();
-		String anchorName = "HelpAnchor";
-		provider.setHelpLocation(new HelpLocation(topicName, anchorName));
 	}
 
 	@Override
@@ -236,7 +227,20 @@ public class GhidrevmPlugin extends Plugin
 	    dialog.add(buttonPanel, BorderLayout.SOUTH);
 
 	    Map<String, String> rpcNodeLinks = setupRpcNodeLinks();
+
+	    loadByBytecodeButton.addActionListener(e -> {
+	        dialog.dispose();
+	        loadBytecode(fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
+	    });
+
+	    loadByAddressButton.addActionListener(e -> {
+	        dialog.dispose();
+	        String selectedNetwork = (String) networkOptionsComboBox.getSelectedItem();
+	        String rpcEndpoint = rpcNodeLinks.getOrDefault(selectedNetwork, filenameTextArea.getText());
+	        fetchContractBytecode(rpcEndpoint, fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
+	    });
 	}
+
 	private Map<String, String> setupRpcNodeLinks() {
 	    Map<String, String> rpcNodeLinks = new HashMap<>();
 	    rpcNodeLinks.put("Ethereum", "https://rpc.ankr.com/eth");
@@ -277,6 +281,7 @@ public class GhidrevmPlugin extends Plugin
 	private void showErrorPopup(String title, String message) {
 	    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
 	}
+
 	private void loadBytecode(String bytecode, String filename) {
         // Clean and prepare the bytecode and filename
         String cleanedBytecode = removePrefix(bytecode, "0x");
