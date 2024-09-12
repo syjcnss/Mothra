@@ -235,7 +235,15 @@ public class GhidrevmPlugin extends Plugin
 	    buttonPanel.add(loadByAddressButton);
 	    dialog.add(buttonPanel, BorderLayout.SOUTH);
 
+	    Map<String, String> rpcNodeLinks = setupRpcNodeLinks();
 	}
+	private Map<String, String> setupRpcNodeLinks() {
+	    Map<String, String> rpcNodeLinks = new HashMap<>();
+	    rpcNodeLinks.put("Ethereum", "https://rpc.ankr.com/eth");
+	    rpcNodeLinks.put("Polygon", "https://rpc.ankr.com/polygon");
+	    rpcNodeLinks.put("Arbitrum", "https://rpc.ankr.com/arbitrum");
+	    rpcNodeLinks.put("Optimism", "https://rpc.ankr.com/optimism");
+	    return rpcNodeLinks;
 	}
 
 	private void finalizeDialog(JDialog dialog) {
