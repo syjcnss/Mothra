@@ -105,7 +105,7 @@ public class GhidrevmPlugin extends Plugin
 			HelpLocation help = new HelpLocation("ImporterPlugin", "Project_Tree");
 
 			options.registerOption(SIMPLE_UNPACK_OPTION, SIMPLE_UNPACK_OPTION_DEFAULT, help,
-				"Perform simple unpack when any packed DB file is imported");
+					"Perform simple unpack when any packed DB file is imported");
 		}
 
 		setupDownloadBytecodeAction();
@@ -115,7 +115,7 @@ public class GhidrevmPlugin extends Plugin
 	protected void dispose() {
 		super.dispose();
 		if (downloadBytecodeAction != null) {
-			downloadBytecodeAction.dispose(); 
+			downloadBytecodeAction.dispose();
 		}
 		if (frontEndService != null) {
 			frontEndService.removeProjectListener(this);
@@ -138,17 +138,17 @@ public class GhidrevmPlugin extends Plugin
 
 	private void setupDownloadBytecodeAction() {
 		downloadBytecodeAction = new DockingAction("Download ByteCode", getName()) {
-            @Override
-            public void actionPerformed(ActionContext context) {
-            	showDownloadBytecodeDialog();
-            }
-        };
-        downloadBytecodeAction.setMenuBarData(new MenuData(new String[] { "&File", "Download ByteCode" }, null,
-                "Import", MenuData.NO_MNEMONIC, "1"));
-        downloadBytecodeAction.setKeyBindingData(null);
-        downloadBytecodeAction.setEnabled(true);
-        downloadBytecodeAction.markHelpUnnecessary();
-        tool.addAction(downloadBytecodeAction);
+			@Override
+			public void actionPerformed(ActionContext context) {
+				showDownloadBytecodeDialog();
+			}
+		};
+		downloadBytecodeAction.setMenuBarData(new MenuData(new String[] { "&File", "Download ByteCode" }, null,
+				"Import", MenuData.NO_MNEMONIC, "1"));
+		downloadBytecodeAction.setKeyBindingData(null);
+		downloadBytecodeAction.setEnabled(true);
+		downloadBytecodeAction.markHelpUnnecessary();
+		tool.addAction(downloadBytecodeAction);
 	}
 
 	@Override
@@ -160,182 +160,186 @@ public class GhidrevmPlugin extends Plugin
 	public void projectOpened(Project project) {
 		// No-ops
 	}
-	
+
 	private void showDownloadBytecodeDialog() {
-	    JDialog dialog = createDialog("Download ByteCode");
+		JDialog dialog = createDialog("Download ByteCode");
 
-	    // Create the necessary input components
-	    JComboBox<String> networkOptionsComboBox = createNetworkOptionsComboBox();
-	    JTextArea filenameTextArea = createTextArea(1, 5);
-	    JTextArea fetchBytecodeOptionTextArea = createTextArea(20, 50);
+		// Create the necessary input components
+		JComboBox<String> networkOptionsComboBox = createNetworkOptionsComboBox();
+		JTextArea filenameTextArea = createTextArea(1, 5);
+		JTextArea fetchBytecodeOptionTextArea = createTextArea(20, 50);
 
-	    // Set up the main content
-	    setupMainContent(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+		// Set up the main content
+		setupMainContent(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
 
-	    // Set up the buttons and their actions
-	    setupButtonsAndActions(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+		// Set up the buttons and their actions
+		setupButtonsAndActions(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
 
-	    // Finalize the dialog setup
-	    finalizeDialog(dialog);
+		// Finalize the dialog setup
+		finalizeDialog(dialog);
 	}
 
 	private JDialog createDialog(String title) {
-	    JDialog dialog = new JDialog(tool.getToolFrame(), title, true);
-	    dialog.setLayout(new BorderLayout());
-	    return dialog;
+		JDialog dialog = new JDialog(tool.getToolFrame(), title, true);
+		dialog.setLayout(new BorderLayout());
+		return dialog;
 	}
 
 	private JComboBox<String> createNetworkOptionsComboBox() {
-	    String[] networkOptions = {"Ethereum", "Polygon", "Arbitrum", "Optimism", "More"};
-	    JComboBox<String> comboBox = new JComboBox<>(networkOptions);
-	    comboBox.setEditable(true);
-	    return comboBox;
+		String[] networkOptions = { "Ethereum", "Polygon", "Arbitrum", "Optimism", "More" };
+		JComboBox<String> comboBox = new JComboBox<>(networkOptions);
+		comboBox.setEditable(true);
+		return comboBox;
 	}
 
 	private JTextArea createTextArea(int rows, int columns) {
-	    JTextArea textArea = new JTextArea(rows, columns);
-	    textArea.setWrapStyleWord(true);
-	    textArea.setLineWrap(true);
-	    return textArea;
+		JTextArea textArea = new JTextArea(rows, columns);
+		textArea.setWrapStyleWord(true);
+		textArea.setLineWrap(true);
+		return textArea;
 	}
 
-	private void setupMainContent(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea, JTextArea fetchBytecodeOptionTextArea) {
-	    JPanel mainPanel = new JPanel(new BorderLayout());
+	private void setupMainContent(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea,
+			JTextArea fetchBytecodeOptionTextArea) {
+		JPanel mainPanel = new JPanel(new BorderLayout());
 
-	    mainPanel.add(createPanel("Network", networkOptionsComboBox), BorderLayout.NORTH);
-	    mainPanel.add(createPanel("File Name", new JScrollPane(filenameTextArea)), BorderLayout.CENTER);
-	    mainPanel.add(createPanel("Deployed Bytecode / Contract Address", new JScrollPane(fetchBytecodeOptionTextArea)), BorderLayout.SOUTH);
+		mainPanel.add(createPanel("Network", networkOptionsComboBox), BorderLayout.NORTH);
+		mainPanel.add(createPanel("File Name", new JScrollPane(filenameTextArea)), BorderLayout.CENTER);
+		mainPanel.add(createPanel("Deployed Bytecode / Contract Address", new JScrollPane(fetchBytecodeOptionTextArea)),
+				BorderLayout.SOUTH);
 
-	    dialog.add(mainPanel, BorderLayout.CENTER);
+		dialog.add(mainPanel, BorderLayout.CENTER);
 	}
 
 	private JPanel createPanel(String labelText, JComponent component) {
-	    JPanel panel = new JPanel(new BorderLayout());
-	    JLabel label = new JLabel(labelText);
-	    panel.add(label, BorderLayout.NORTH);
-	    panel.add(component, BorderLayout.CENTER);
-	    return panel;
+		JPanel panel = new JPanel(new BorderLayout());
+		JLabel label = new JLabel(labelText);
+		panel.add(label, BorderLayout.NORTH);
+		panel.add(component, BorderLayout.CENTER);
+		return panel;
 	}
 
-	private void setupButtonsAndActions(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea, JTextArea fetchBytecodeOptionTextArea) {
-	    JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
-	    JButton loadByBytecodeButton = new JButton("By Bytecode");
-	    JButton loadByAddressButton = new JButton("By Address");
+	private void setupButtonsAndActions(JDialog dialog, JComboBox<String> networkOptionsComboBox,
+			JTextArea filenameTextArea, JTextArea fetchBytecodeOptionTextArea) {
+		JPanel buttonPanel = new JPanel(new GridLayout(1, 2));
+		JButton loadByBytecodeButton = new JButton("By Bytecode");
+		JButton loadByAddressButton = new JButton("By Address");
 
-	    buttonPanel.add(loadByBytecodeButton);
-	    buttonPanel.add(loadByAddressButton);
-	    dialog.add(buttonPanel, BorderLayout.SOUTH);
+		buttonPanel.add(loadByBytecodeButton);
+		buttonPanel.add(loadByAddressButton);
+		dialog.add(buttonPanel, BorderLayout.SOUTH);
 
-	    Map<String, String> rpcNodeLinks = setupRpcNodeLinks();
+		Map<String, String> rpcNodeLinks = setupRpcNodeLinks();
 
-	    loadByBytecodeButton.addActionListener(e -> {
-	        dialog.dispose();
-	        loadBytecode(fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
-	    });
+		loadByBytecodeButton.addActionListener(e -> {
+			dialog.dispose();
+			loadBytecode(fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
+		});
 
-	    loadByAddressButton.addActionListener(e -> {
-	        dialog.dispose();
-	        String selectedNetwork = (String) networkOptionsComboBox.getSelectedItem();
-	        String rpcEndpoint = rpcNodeLinks.getOrDefault(selectedNetwork, filenameTextArea.getText());
-	        fetchContractBytecode(rpcEndpoint, fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
-	    });
+		loadByAddressButton.addActionListener(e -> {
+			dialog.dispose();
+			String selectedNetwork = (String) networkOptionsComboBox.getSelectedItem();
+			String rpcEndpoint = rpcNodeLinks.getOrDefault(selectedNetwork, filenameTextArea.getText());
+			fetchContractBytecode(rpcEndpoint, fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
+		});
 	}
 
 	private Map<String, String> setupRpcNodeLinks() {
-	    Map<String, String> rpcNodeLinks = new HashMap<>();
-	    rpcNodeLinks.put("Ethereum", "https://rpc.ankr.com/eth");
-	    rpcNodeLinks.put("Polygon", "https://rpc.ankr.com/polygon");
-	    rpcNodeLinks.put("Arbitrum", "https://rpc.ankr.com/arbitrum");
-	    rpcNodeLinks.put("Optimism", "https://rpc.ankr.com/optimism");
-	    return rpcNodeLinks;
+		Map<String, String> rpcNodeLinks = new HashMap<>();
+		rpcNodeLinks.put("Ethereum", "https://rpc.ankr.com/eth");
+		rpcNodeLinks.put("Polygon", "https://rpc.ankr.com/polygon");
+		rpcNodeLinks.put("Arbitrum", "https://rpc.ankr.com/arbitrum");
+		rpcNodeLinks.put("Optimism", "https://rpc.ankr.com/optimism");
+		return rpcNodeLinks;
 	}
 
 	private void finalizeDialog(JDialog dialog) {
-	    dialog.pack();
-	    dialog.setLocationRelativeTo(tool.getToolFrame());
-	    dialog.setVisible(true);
+		dialog.pack();
+		dialog.setLocationRelativeTo(tool.getToolFrame());
+		dialog.setVisible(true);
 	}
-	
+
 	private void fetchContractBytecode(String rpcEndpoint, String contractAddress, String filename) {
 		// Set up the web3j service
 		String errorTitle = "Failed to fetch bytecode";
 		String errorMessage = "The fetched bytecode is null or empty. Please check the contract address and try again.";
-        Web3j web3j = Web3j.build(new HttpService(rpcEndpoint));
+		Web3j web3j = Web3j.build(new HttpService(rpcEndpoint));
 
-        try {
-        	// Fetch the contract bytecode.
-            EthGetCode ethGetCode = web3j.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST).send();
-            String bytecode = ethGetCode.getCode();
-            
-            if (bytecode == null || bytecode.isEmpty())
-                showErrorPopup(errorTitle, errorMessage);
-            else
-                loadBytecode(bytecode, filename);
+		try {
+			// Fetch the contract bytecode.
+			EthGetCode ethGetCode = web3j.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST).send();
+			String bytecode = ethGetCode.getCode();
 
-        } catch (IOException e) {
-            e.printStackTrace();
-            showErrorPopup(errorTitle, errorMessage);
-        }
-    }
-	
+			if (bytecode == null || bytecode.isEmpty())
+				showErrorPopup(errorTitle, errorMessage);
+			else
+				loadBytecode(bytecode, filename);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+			showErrorPopup(errorTitle, errorMessage);
+		}
+	}
+
 	private void showErrorPopup(String title, String message) {
-	    JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(null, message, title, JOptionPane.ERROR_MESSAGE);
 	}
 
 	private void loadBytecode(String bytecode, String filename) {
-        // Clean and prepare the bytecode and filename
-        String cleanedBytecode = removePrefix(bytecode, "0x");
-        String fullFilename = appendSuffix(filename, ".evm");
-	    try {
-	        // Set up the loader and load specification
-	        GhidrevmLoader loader = new GhidrevmLoader();
-	        LoadSpec loadSpec = configureLoadSpec(loader, "evm:256:default", "default");
+		// Clean and prepare the bytecode and filename
+		String cleanedBytecode = removePrefix(bytecode, "0x");
+		String fullFilename = appendSuffix(filename, ".evm");
+		try {
+			// Set up the loader and load specification
+			GhidrevmLoader loader = new GhidrevmLoader();
+			LoadSpec loadSpec = configureLoadSpec(loader, "evm:256:default", "default");
 
-	        // Load the bytecode using the custom loader
-	        loadAndSaveBytecode(cleanedBytecode, fullFilename, loadSpec);
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+			// Load the bytecode using the custom loader
+			loadAndSaveBytecode(cleanedBytecode, fullFilename, loadSpec);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	private String removePrefix(String input, String prefix) {
-	    return input.startsWith(prefix) ? input.substring(prefix.length()) : input;
+		return input.startsWith(prefix) ? input.substring(prefix.length()) : input;
 	}
 
 	private String appendSuffix(String input, String suffix) {
-	    return input.endsWith(suffix) ? input : input + suffix;
+		return input.endsWith(suffix) ? input : input + suffix;
 	}
 
 	private LoadSpec configureLoadSpec(GhidrevmLoader loader, String languageSpec, String compilerSpecId) {
-	    LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair(languageSpec, compilerSpecId);
-	    return new LoadSpec(loader, 0, compilerSpec, true);
+		LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair(languageSpec, compilerSpecId);
+		return new LoadSpec(loader, 0, compilerSpec, true);
 	}
 
 	private void loadAndSaveBytecode(String bytecode, String filename, LoadSpec loadSpec) throws Exception {
-	    ByteProvider provider = new ByteArrayProvider(hexStringToByteArray(bytecode));
-	    Project project = AppInfo.getActiveProject();
-	    Object consumer = new Object();
-	    TaskMonitor monitor = new ConsoleTaskMonitor();
+		ByteProvider provider = new ByteArrayProvider(hexStringToByteArray(bytecode));
+		Project project = AppInfo.getActiveProject();
+		Object consumer = new Object();
+		TaskMonitor monitor = new ConsoleTaskMonitor();
 
-	    LoadResults<? extends DomainObject> results = loadSpec.getLoader().load(provider, filename, project, "", loadSpec, new ArrayList<>(), new MessageLog(), consumer, monitor);
+		LoadResults<? extends DomainObject> results = loadSpec.getLoader().load(provider, filename, project, "",
+				loadSpec, new ArrayList<>(), new MessageLog(), consumer, monitor);
 
-	    // Save the loading results to the project
-	    results.save(project, consumer, null, monitor);
+		// Save the loading results to the project
+		results.save(project, consumer, null, monitor);
 	}
-	
+
 	private byte[] hexStringToByteArray(String hexString) {
-	    Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
-	    Matcher m = p.matcher(hexString);
+		Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
+		Matcher m = p.matcher(hexString);
 
-	    int count = (int) m.results().count();
-	    m.reset();
+		int count = (int) m.results().count();
+		m.reset();
 
-	    byte[] byteCode = new byte[count];
-	    int i = 0;
-	    while (m.find()) {
-	        String hexDigit = m.group();
-	        byteCode[i++] = (byte) Integer.parseInt(hexDigit, 16);
-	    }
-	    return byteCode;
+		byte[] byteCode = new byte[count];
+		int i = 0;
+		while (m.find()) {
+			String hexDigit = m.group();
+			byteCode[i++] = (byte) Integer.parseInt(hexDigit, 16);
+		}
+		return byteCode;
 	}
 }
