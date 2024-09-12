@@ -79,15 +79,16 @@ import ghidra.util.task.TaskMonitor;
     eventsConsumed = { ProgramActivatedPluginEvent.class }
 )
 //@formatter:on
-public class GhidrevmPlugin extends ProgramPlugin {
+public class GhidrevmPlugin extends Plugin
+		implements ApplicationLevelPlugin, ProjectListener {
 
-	MyProvider provider;
+	private static final String SIMPLE_UNPACK_OPTION = "";
+	private static final boolean SIMPLE_UNPACK_OPTION_DEFAULT = false;
 
-	/**
-	 * Plugin constructor.
-	 * 
-	 * @param tool The plugin tool that this plugin is added to.
-	 */
+	private DockingAction downloadBytecodeAction;
+	private GhidraFileChooser chooser;
+	private FrontEndService frontEndService;
+
 	public GhidrevmPlugin(PluginTool tool) {
 		super(tool);
 
@@ -102,14 +103,22 @@ public class GhidrevmPlugin extends ProgramPlugin {
 	}
 
 	@Override
-	public void init() {
+	protected void init() {
 		super.init();
 
-		// TODO: Acquire services if necessary
-	}
+		frontEndService = tool.getService(FrontEndService.class);
+		if (frontEndService != null) {
+			frontEndService.addProjectListener(this);
+
+			ToolOptions options = tool.getOptions(ToolConstants.FILE_IMPORT_OPTIONS);
+			HelpLocation help = new HelpLocation("ImporterPlugin", "Project_Tree");
+
+			options.registerOption(SIMPLE_UNPACK_OPTION, SIMPLE_UNPACK_OPTION_DEFAULT, help,
+				"Perform simple unpack when any packed DB file is imported");
+		}
 
 	// TODO: If provider is desired, it is recommended to move it to its own file
-	private static class MyProvider extends ComponentProvider {
+	}
 
 		private JPanel panel;
 		private DockingAction action;
