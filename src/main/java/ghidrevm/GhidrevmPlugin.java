@@ -120,23 +120,30 @@ public class GhidrevmPlugin extends Plugin
 	// TODO: If provider is desired, it is recommended to move it to its own file
 	}
 
-		private JPanel panel;
-		private DockingAction action;
-
-		public MyProvider(Plugin plugin, String owner) {
-			super(plugin.getTool(), owner, owner);
-			buildPanel();
-			createActions();
+	@Override
+	protected void dispose() {
+		super.dispose();
+		if (downloadBytecodeAction != null) {
+			downloadBytecodeAction.dispose(); 
+		}
+		if (frontEndService != null) {
+			frontEndService.removeProjectListener(this);
+			frontEndService = null;
 		}
 
-		// Customize GUI
-		private void buildPanel() {
-			panel = new JPanel(new BorderLayout());
-			JTextArea textArea = new JTextArea(5, 25);
-			textArea.setEditable(false);
-			panel.add(new JScrollPane(textArea));
-			setVisible(true);
+		if (chooser != null) {
+			chooser.dispose();
 		}
+	}
+
+	@Override
+	public void processEvent(PluginEvent event) {
+		super.processEvent(event);
+
+		if (event instanceof ProgramActivatedPluginEvent) {
+			ProgramActivatedPluginEvent pape = (ProgramActivatedPluginEvent) event;
+		}
+	}
 
 		// TODO: Customize actions
 		private void createActions() {
@@ -152,9 +159,14 @@ public class GhidrevmPlugin extends Plugin
 			dockingTool.addLocalAction(this, action);
 		}
 
-		@Override
-		public JComponent getComponent() {
-			return panel;
-		}
+	@Override
+	public void projectClosed(Project project) {
+		// No-ops
+	}
+
+	@Override
+	public void projectOpened(Project project) {
+		// No-ops
+	}
 	}
 }
