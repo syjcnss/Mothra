@@ -23,6 +23,10 @@ public class CborDecoder {
 
     public CborDecoder(FlatProgramAPI api, int index, byte[] data) throws IOException {
         // Environment Configuration
+        if (data == null) {
+            throw new IllegalArgumentException("The byte array 'data' cannot be null");
+        }
+
         this.api = api;
         this.index = index;
         Address addr = api.toAddr(index);
@@ -31,7 +35,7 @@ public class CborDecoder {
         // Metadata Decoding
         ByteArrayInputStream input = new ByteArrayInputStream(data);
         while (input.available() > 0) {
-            System.out.println(decode(input));
+            decode(input);
         }
     }
 

@@ -104,23 +104,24 @@ public class MetadataObj {
 	}
 
 	private static String extractVersion(String version) {
-		if (version.length() < 8)
+		if (version.length() < 8) {
 			return "";
+		}
 
 		version = version.substring(2);
 
-		String data = "";
-		int decimalString = 0;
-		decimalString = Integer.parseInt(version.substring(0, 2));
-		data += decimalString + ".";
+		StringBuilder data = new StringBuilder();
 
-		decimalString = Integer.parseInt(version.substring(2, 4));
-		data += decimalString + ".";
+		int decimalValue = Integer.parseInt(version.substring(0, 2), 16);
+		data.append(decimalValue).append(".");
 
-		decimalString = Integer.parseInt(version.substring(4, 6));
-		data += decimalString;
+		decimalValue = Integer.parseInt(version.substring(2, 4), 16);
+		data.append(decimalValue).append(".");
 
-		return data;
+		decimalValue = Integer.parseInt(version.substring(4, 6), 16);
+		data.append(decimalValue);
+
+		return data.toString();
 	}
 
 	private static String extractIpfsHash(JsonNode fieldValue, String defaultValue) {
