@@ -12,5 +12,6 @@
     <property key="Analyzers.Basic Constant Reference Analyzer" value="true"/>
     <property key="Analyzers.EVM Disassembler" value="true"/>
     <property key="Analyzers.EVM Function Analyzer" value="true"/>
+    <property key="Analyzers.Function Selector Analyzer" value="true"/>
   </properties>
 </processor_spec>
