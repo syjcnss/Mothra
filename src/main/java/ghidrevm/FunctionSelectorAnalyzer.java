@@ -44,18 +44,18 @@ public class FunctionSelectorAnalyzer extends AbstractAnalyzer {
         InstructionIterator instIter = program.getListing().getInstructions(set, true);
 
         String filePath = null;
-		try {
-			filePath = Application.getMyModuleRootDirectory().getCanonicalPath() + "/data/FuncSig.csv";
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		
-		if (filePath == null) {
+        try {
+            filePath = Application.getMyModuleRootDirectory().getCanonicalPath() + "/data/FuncSig.csv";
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        if (filePath == null) {
             log.appendMsg("Function Selector Detection Failure");
             return false;
         }
-		
-        ColumnType[] columnTypes = { ColumnType.STRING, ColumnType.STRING};                                                                    // CSV structure
+
+        ColumnType[] columnTypes = { ColumnType.STRING, ColumnType.STRING }; // CSV structure
         CsvReadOptions options = CsvReadOptions.builder(filePath)
                 .columnTypes(columnTypes)
                 .build();
