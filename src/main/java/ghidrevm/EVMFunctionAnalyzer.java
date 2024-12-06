@@ -24,7 +24,7 @@ public class EVMFunctionAnalyzer extends AbstractAnalyzer {
 	public EVMFunctionAnalyzer() {
         super("EVM Function Analyzer", "Identify functions in contract",
         		AnalyzerType.INSTRUCTION_ANALYZER);
-		setPriority(AnalysisPriority.REFERENCE_ANALYSIS.after());
+		setPriority(AnalysisPriority.REFERENCE_ANALYSIS.before());
 		setDefaultEnablement(true);
 	}
 
