@@ -1,11 +1,12 @@
 package ghidrevm;
 
-import java.io.File;
+import java.io.IOException;
 
 import ghidra.app.services.AbstractAnalyzer;
 import ghidra.app.services.AnalysisPriority;
 import ghidra.app.services.AnalyzerType;
 import ghidra.app.util.importer.MessageLog;
+import ghidra.framework.Application;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.address.Address;
 import ghidra.program.model.address.AddressSetView;
@@ -16,7 +17,9 @@ import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryAccessException;
 import ghidra.util.exception.CancelledException;
 import ghidra.util.task.TaskMonitor;
+import tech.tablesaw.api.ColumnType;
 import tech.tablesaw.api.Table;
+import tech.tablesaw.io.csv.CsvReadOptions;
 
 public class FunctionSelectorAnalyzer extends AbstractAnalyzer {
     Table funcSigDatabase;
@@ -40,9 +43,29 @@ public class FunctionSelectorAnalyzer extends AbstractAnalyzer {
             throws CancelledException {
         InstructionIterator instIter = program.getListing().getInstructions(set, true);
 
-        String basePath = new File("").getAbsolutePath();
-        String filePath = basePath + "/src/main/java/ghidrevm/data/FuncSig.csv";
-        funcSigDatabase = Table.read().csv(filePath);
+        String filePath = null;
+		try {
+			filePath = Application.getMyModuleRootDirectory().getCanonicalPath() + "/data/FuncSig.csv";
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		if (filePath == null) {
+            log.appendMsg("Function Selector Detection Failure");
+            return false;
+        }
+		
+        ColumnType[] columnTypes = { ColumnType.STRING, ColumnType.STRING};                                                                    // CSV structure
+        CsvReadOptions options = CsvReadOptions.builder(filePath)
+                .columnTypes(columnTypes)
+                .build();
+
+        try {
+            funcSigDatabase = Table.read().usingOptions(options);
+        } catch (Exception e) {
+            log.appendMsg("Function Selector Detection Failure");
+            return false;
+        }
 
         while (instIter.hasNext()) {
             Instruction instr = instIter.next();
@@ -95,12 +118,12 @@ public class FunctionSelectorAnalyzer extends AbstractAnalyzer {
         while (low <= high) {
             int mid = low + (high - low) / 2;
 
-            String midKey = funcSigDatabase.textColumn("Key").get(mid);
+            String midKey = funcSigDatabase.stringColumn("Key").get(mid);
 
             int comparison = midKey.compareTo(keyToFind);
 
             if (comparison == 0) {
-                return funcSigDatabase.textColumn("Value").get(mid);
+                return funcSigDatabase.stringColumn("Value").get(mid);
             } else if (comparison < 0) {
                 low = mid + 1;
             } else {
