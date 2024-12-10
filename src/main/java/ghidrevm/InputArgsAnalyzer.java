@@ -40,6 +40,7 @@ public class InputArgsAnalyzer extends AbstractAnalyzer {
 	public boolean added(Program program, AddressSetView set, TaskMonitor monitor, MessageLog log)
 			throws CancelledException {
 		analyzeInstructions(program, set);
+		processEntries(program);
 		return true;
 	}
 
@@ -81,6 +82,114 @@ public class InputArgsAnalyzer extends AbstractAnalyzer {
 		return boundaryStart != null &&
 				!boundaryStart.equals(destination) &&
 				isCallPattern(program, boundaryStart, instr.getAddress().add(1));
+	}
+
+	private void processEntries(Program program) {
+		for (Address entry : entries) {
+			if (entry == null)
+				continue;
+
+			Address start = jumpSources.get(entry);
+
+			if (start == null)
+				continue;
+
+			Address end = jumpDestinations.get(start);
+
+			if (end == null)
+				continue;
+
+			AddressSet addressSet = new AddressSet(start, end);
+			int parameterCount = calculateInputParameters(program, addressSet, end);
+			if (parameterCount > 0)
+				defineFunction(program, entry, parameterCount);
+		}
+	}
+
+	private int calculateInputParameters(Program program, AddressSet addressSet, Address targetAddress) {
+		InstructionIterator instructions = program.getListing().getInstructions(addressSet, true);
+		ArrayList<Boolean> stackUsage = new ArrayList<>(Collections.nCopies(16, false));
+		int stackChange = 0, stackIndex = 0, stackOffset = 16, swapInputs = 0;
+		boolean processingInputs = false;
+
+		while (instructions.hasNext()) {
+			Instruction instr = instructions.next();
+			String mnemonic = instr.getMnemonicString();
+
+			if (mnemonic.startsWith("PUSH")) {
+				int pushedAddressValue = (int) instr.getScalar(0).getValue();
+				int targetAddressValue = (int) targetAddress.getOffset();
+
+				if (pushedAddressValue == targetAddressValue) {
+					processingInputs = true;
+					continue;
+				}
+			}
+
+			if (!processingInputs)
+				continue;
+
+			stackChange += stackAnalyzer.stackChanges(mnemonic);
+
+			int opcodeExtractedValue = 0;
+			if (mnemonic.startsWith("DUP")) {
+				opcodeExtractedValue = extractMnemonicSuffix(mnemonic, "DUP");
+				if (stackUsage.get(stackIndex + stackOffset - opcodeExtractedValue) == false) {
+					stackUsage.set(stackIndex + stackOffset - opcodeExtractedValue, true);
+				}
+			} else if (mnemonic.startsWith("SWAP")) {
+				opcodeExtractedValue = extractMnemonicSuffix(mnemonic, "SWAP");
+				if (stackUsage.get(stackIndex + stackOffset - opcodeExtractedValue) == false) {
+					stackUsage.set(stackIndex + stackOffset - opcodeExtractedValue, true);
+					swapInputs += 1;
+				}
+			}
+
+			int absStackChange = Math.abs(stackChange);
+
+			for (int i = 0; i < absStackChange; i++) {
+				if (stackChange > 0) {
+					stackUsage.add(true);
+				} else if (!stackUsage.isEmpty()) {
+					stackUsage.remove(stackUsage.size() - 1);
+				}
+			}
+		}
+
+		return stackChange + swapInputs;
+	}
+
+	private void defineFunction(Program program, Address entry, int parameterCount) {
+		try {
+			FunctionManager functionManager = program.getFunctionManager();
+			Function function = functionManager.getFunctionAt(entry);
+			if (function != null) {
+				function.setName("FUNC_" + entry.toString(), SourceType.USER_DEFINED);
+				Parameter[] parameters = createParameters(program, parameterCount);
+				function.updateFunction(null, null, Function.FunctionUpdateType.CUSTOM_STORAGE, true,
+						SourceType.USER_DEFINED, parameters);
+			}
+		} catch (DuplicateNameException | InvalidInputException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private Parameter[] createParameters(Program program, int count) throws InvalidInputException {
+		Parameter[] parameters = new Parameter[count];
+		Uint256DataType paramType = new Uint256DataType();
+		for (int i = 0; i < count; i++) {
+			VariableStorage storage = new VariableStorage(program, i * 32, 32);
+			parameters[i] = new ParameterImpl("param" + (i + 1), paramType, storage, program);
+		}
+		return parameters;
+	}
+
+	private int extractMnemonicSuffix(String mnemonic, String prefix) {
+		try {
+			return Integer.parseInt(mnemonic.substring(prefix.length()));
+		} catch (NumberFormatException e) {
+			return -1;
+		}
 	}
 
 	private boolean isCallPattern(Program program, Address start, Address end) {
