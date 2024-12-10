@@ -14,5 +14,6 @@
     <property key="Analyzers.EVM Function Analyzer" value="true"/>
     <property key="Analyzers.Function Selector Analyzer" value="true"/>
     <property key="Analyzers.EVM Bit Extend Analyzer" value="true"/>
+    <property key="Analyzers.Internal Function Arguments Analyzer" value="true"/>
   </properties>
 </processor_spec>
