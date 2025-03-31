@@ -68,6 +68,8 @@ import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.util.HelpLocation;
 import ghidra.util.task.ConsoleTaskMonitor;
 import ghidra.util.task.TaskMonitor;
+import ghidrevm.loader.EVMLoader;
+import ghidrevm.loader.EOFLoader;
 
 //@formatter:off
 @PluginInfo(
@@ -291,8 +293,17 @@ public class GhidrevmPlugin extends Plugin
 		String fullFilename = appendSuffix(filename, ".evm");
 		try {
 			// Set up the loader and load specification
-			GhidrevmLoader loader = new GhidrevmLoader();
-			LoadSpec loadSpec = configureLoadSpec(loader, "evm:256:default", "default");
+			LanguageCompilerSpecPair compilerSpec = null;
+			LoadSpec loadSpec = null;
+			if(!isEOFCompatible(cleanedBytecode)) {
+				EVMLoader loader = new EVMLoader();
+				compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
+				loadSpec = new LoadSpec(loader, 0, compilerSpec, true);
+			} else {
+				EOFLoader loader = new EOFLoader();
+				compilerSpec = new LanguageCompilerSpecPair("EVM:256:EOF", "V1");
+				loadSpec = new LoadSpec(loader, 0, compilerSpec, true);
+			}
 
 			// Load the bytecode using the custom loader
 			loadAndSaveBytecode(cleanedBytecode, fullFilename, loadSpec);
@@ -301,17 +312,16 @@ public class GhidrevmPlugin extends Plugin
 		}
 	}
 
+	private boolean isEOFCompatible(String data) {
+		return (data.length()>=2) && (data.startsWith("ef00"));
+	}
+
 	private String removePrefix(String input, String prefix) {
 		return input.startsWith(prefix) ? input.substring(prefix.length()) : input;
 	}
 
 	private String appendSuffix(String input, String suffix) {
 		return input.endsWith(suffix) ? input : input + suffix;
-	}
-
-	private LoadSpec configureLoadSpec(GhidrevmLoader loader, String languageSpec, String compilerSpecId) {
-		LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair(languageSpec, compilerSpecId);
-		return new LoadSpec(loader, 0, compilerSpec, true);
 	}
 
 	private void loadAndSaveBytecode(String bytecode, String filename, LoadSpec loadSpec) throws Exception {

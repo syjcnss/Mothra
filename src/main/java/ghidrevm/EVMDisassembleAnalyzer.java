@@ -1,10 +1,14 @@
 package ghidrevm;
 
 import ghidra.app.cmd.disassemble.DisassembleCommand;
-import ghidra.app.services.*;
+import ghidra.app.services.AbstractAnalyzer;
+import ghidra.app.services.AnalysisPriority;
+import ghidra.app.services.AnalyzerType;
 import ghidra.app.util.importer.MessageLog;
+import ghidra.program.model.address.AddressFactory;
 import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSetView;
+import ghidra.program.model.address.AddressSpace;
 import ghidra.program.model.lang.Processor;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.mem.MemoryBlock;
@@ -20,22 +24,34 @@ public class EVMDisassembleAnalyzer extends AbstractAnalyzer {
 
     @Override
 	public boolean canAnalyze(Program program) {
-		boolean canAnalyze = program.getLanguage().getProcessor().equals(
+		boolean canAnalyzeEVMRule = program.getLanguage().getProcessor().equals(
 			Processor.findOrPossiblyCreateProcessor("EVM"));
-
-		return canAnalyze;
+		boolean canAnalyzeEOFRule = program.getLanguage().getProcessor().equals(
+			Processor.findOrPossiblyCreateProcessor("EOF")
+		);
+		return canAnalyzeEVMRule || canAnalyzeEOFRule;
 	}
 
 	@Override
 	public boolean added(Program program, AddressSetView set, TaskMonitor monitor, MessageLog log)
 			throws CancelledException {
-		MemoryBlock code = program.getMemory().getBlock("code");
-		AddressSet disSet = set.intersectRange(code.getStart(), code.getEnd());
+		boolean canAnalyzeEOFRule = program.getLanguage().getProcessor().equals(
+			Processor.findOrPossiblyCreateProcessor("EOF")
+		);
+		
+		AddressSet disSet = null;
+		
+		if(canAnalyzeEOFRule) {
+			AddressFactory af = program.getAddressFactory();
+			AddressSpace as = af.getDefaultAddressSpace();
+			disSet = set.intersectRange(as.getMinAddress(), as.getMaxAddress());
+		} else {
+			MemoryBlock code = program.getMemory().getBlock("code");
+			disSet = set.intersectRange(code.getStart(), code.getEnd());
+		}
 
 		DisassembleCommand cmd = new DisassembleCommand(disSet, null, false);
 		cmd.applyTo(program, monitor);
-		
-
 
 		return true;
 	}

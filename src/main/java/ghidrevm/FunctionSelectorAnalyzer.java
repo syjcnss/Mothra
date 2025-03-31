@@ -32,10 +32,12 @@ public class FunctionSelectorAnalyzer extends AbstractAnalyzer {
 
     @Override
     public boolean canAnalyze(Program program) {
-        boolean canAnalyze = program.getLanguage().getProcessor().equals(
-                Processor.findOrPossiblyCreateProcessor("EVM"));
-
-        return canAnalyze;
+    	boolean canAnalyzeEVMRule = program.getLanguage().getProcessor().equals(
+    			Processor.findOrPossiblyCreateProcessor("EVM"));
+		boolean canAnalyzeEOFRule = program.getLanguage().getProcessor().equals(
+			Processor.findOrPossiblyCreateProcessor("EOF")
+		);
+    	return canAnalyzeEVMRule || canAnalyzeEOFRule;
     }
 
     @Override
