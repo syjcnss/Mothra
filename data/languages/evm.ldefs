@@ -15,4 +15,15 @@
     <description>Skeleton Language Module</description>
     <compiler name="default" spec="evm.cspec" id="default"/>
 </language> 
+<language processor="EOF"
+            endian="big"
+            size="256"
+            variant="default"
+            version="1.0"
+            slafile="eofv1.sla"
+            processorspec="evm.pspec"
+            id="EVM:256:EOF">
+    <description>Ethereum Object Format V1</description>
+    <compiler name="EOF" spec="evm.cspec" id="V1"/>
+</language>
 </language_definitions>
