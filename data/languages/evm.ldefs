@@ -20,10 +20,10 @@
             size="256"
             variant="default"
             version="1.0"
-            slafile="eofv1.sla"
-            processorspec="evm.pspec"
+            slafile="eof/eofv1.sla"
+            processorspec="eof/eof.pspec"
             id="EVM:256:EOF">
     <description>Ethereum Object Format V1</description>
-    <compiler name="EOF" spec="evm.cspec" id="V1"/>
+    <compiler name="EOF" spec="eof/eof.cspec" id="V1"/>
 </language>
 </language_definitions>

@@ -8,8 +8,7 @@ define alignment=1;
 define space code type=ram_space size=8 default;
 # define space code     type=ram_space      size=2       default wordsize=1;
 define space stk      type=ram_space      size=2       wordsize=8; ## Stack
-define space rstk0    type=ram_space      size=8       wordsize=1; ## Return Stack (Program Counter)
-define space rstk1    type=ram_space      size=2       wordsize=8; ## Return Stack (Code Section)
+define space rstk     type=ram_space      size=8       wordsize=1; ## Return Stack (Program Counter)
 
 define space register type=register_space size=2;
 
@@ -23,7 +22,7 @@ define register offset=0x12 size=32   [r0 r1 r2 r3 r4 r5 r6 r7];
 define token opcode (8) op = (0,7);
 
 define token data8  (8)  imm8  = (0,7)  hex;
-define token data16 (16) imm16 = (0,15) hex;
+define token data16 (16) imm16 = (0,15) hex simm16=(0,15) signed;
 define token data24 (24) imm24 = (0,23) hex;
 define token data32 (32) imm32 = (0,31) hex;
 define token data40 (40) imm40 = (0,39) hex;
@@ -51,26 +50,14 @@ macro pop(x) {
 }
 
 ## Push to return stack (Program Counter)
-macro pushR0(x) {
+macro rpush(x) {
     RSP = RSP - 8;
-    *[rstk0] RSP = x;
+    *[rstk] RSP = x;
 }
 
 ## Pop from return stack (Code Section)
-macro popR0(x) {
-    x = *[rstk0] RSP;
-    RSP = RSP + 8;
-}
-
-## Push to return (Code Section)
-macro pushR1(x) {
-    RSP = RSP - 8;
-    *[rstk1] RSP = x;
-}
-
-## Pop from return stack (Code Section)
-macro popR1(x) {
-    x = *[rstk1] RSP;
+macro rpop(x) {
+    x = *[rstk] RSP;
     RSP = RSP + 8;
 }
 
@@ -966,25 +953,16 @@ define pcodeop _datacopy;
 }
 
 ######################  section 0xe0  ##########################
+rel16: reloc is simm16        [ reloc=inst_next+simm16; ] { export *[code]:8 reloc; }
+# EOF
+:RJUMP rel16 is op=0xe0; rel16 {
+    goto rel16;
+}
 
 # EOF
-# :RJUMP imm16 is op=0xe0; imm16 {
-#     local offset:2 = imm16;
-#     local dest:8 = PC + sext(offset) + 3;
-#     goto [dest];
-# }
-
-
-# EOF
-:RJUMPI imm16 is op=0xe1; imm16 {
+:RJUMPI rel16 is op=0xe1; rel16 {
     pop(r0);
-    local dest:8;
-    dest = PC + 3;
-    if (r0 == 0) goto [dest];
-
-    local offset:2 = imm16;
-    dest = PC + sext(offset) + 3;
-    goto [dest];
+    if (r0 != 0) goto rel16;
 }
 
 # EOF
@@ -992,27 +970,21 @@ define pcodeop _datacopy;
 	
 # }
 
-:CALLF imm16 is op=0xe3; imm16 {
-    pushR0(PC+3);
-    local tmp:8 = imm16;
-    local base:8 = 0x10000;
-    local scaled:8 = base * tmp;
-    local p:8 = base + scaled;
-    call [p];
+sel16: selector is imm16        [ selector=(imm16+1)*0x10000; ] { export *[code]:8 selector; }
+
+:CALLF sel16 is op=0xe3; sel16 {
+    rpush(&:8 inst_next);
+    call sel16;
 }
 
 :RETF is op=0xe4 {
-    popR0(r0);
-
-    return [r0];
+    rpop(PC);
+    return [PC];
 }
 
-:JUMPF imm16 is op=0xe5; imm16 {
-    local tmp:8 = imm16;
-    local base:8 = 0x10000;
-    local scaled:8 = base * tmp;
-    local p:8 = base + scaled;
-    call [p];
+
+:JUMPF sel16 is op=0xe5; sel16 {
+    call sel16;
 }
 
 # EOF

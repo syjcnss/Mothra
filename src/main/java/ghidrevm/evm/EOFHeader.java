@@ -9,6 +9,7 @@ import ghidra.app.util.importer.MessageLog;
 import ghidra.program.database.mem.FileBytes;
 import ghidra.program.flatapi.FlatProgramAPI;
 import ghidra.program.model.address.Address;
+import ghidra.program.model.address.AddressSet;
 import ghidra.program.model.address.AddressSpace;
 import ghidra.program.model.data.ArrayDataType;
 import ghidra.program.model.data.ByteDataType;
@@ -18,6 +19,7 @@ import ghidra.program.model.listing.Parameter;
 import ghidra.program.model.listing.ParameterImpl;
 import ghidra.program.model.listing.Program;
 import ghidra.program.model.listing.VariableStorage;
+import ghidra.program.model.mem.MemoryBlock;
 import ghidra.program.model.symbol.SourceType;
 import ghidra.util.task.TaskMonitor;
 import ghidrevm.Uint256DataType;
@@ -98,7 +100,7 @@ public class EOFHeader {
 		index = processHeaderSection(index, data);
 	
 		try {
-			MemoryBlockUtils.createInitializedBlock(program, false, "Type Section",space.getAddress(0x0800), fileBytes, index / 2, this.type_size, "Type Section Content", "", true, true, true, log);
+			MemoryBlockUtils.createInitializedBlock(program, false, "Type Section",space.getAddress(0x0800), fileBytes, index / 2, this.type_size, "Type Section Content", "", true, false, false, log);
  		} catch(Exception e) {
  			e.printStackTrace();
  		}
@@ -214,19 +216,18 @@ public class EOFHeader {
 		for(int i=0;i<this.code_section_num;i++) {
 			long offset = 0x10000 + 0x10000 * i;
 			String comment = "Input: "+this.inputArgs[i] + " Output: "+this.outputArgs[i]+" Max Stack Height: "+this.maxStackHeights[i];
-			MemoryBlockUtils.createInitializedBlock(program, false, "Code Section "+i ,space.getAddress(offset), fileBytes, index / 2, this.codeSectionSizes[i], comment, "", true, true, true, log);
+			MemoryBlock block = MemoryBlockUtils.createInitializedBlock(program, false, "Code Section "+i ,space.getAddress(offset), fileBytes, index / 2, this.codeSectionSizes[i], comment, "", true, false, true, log);
 			index += this.codeSectionSizes[i] * 2;
 
 			// Create function with parameters
 			Address entry = space.getAddress(offset);
-			CreateFunctionCmd createFuncCmd = new CreateFunctionCmd(entry);
+			CreateFunctionCmd createFuncCmd = new CreateFunctionCmd("FUNC_"+entry.toString(), entry, new AddressSet(block.getAddressRange()), SourceType.USER_DEFINED);
 			createFuncCmd.applyTo(program);
-			
 			// Set function name and parameters
 			FunctionManager functionManager = program.getFunctionManager();
 			Function function = functionManager.getFunctionAt(entry);
 			if (function != null) {
-				function.setName("FUNC_" + entry.toString(), SourceType.USER_DEFINED);
+				// function.setName("FUNC_" + entry.toString(), SourceType.USER_DEFINED);
 				Parameter[] parameters = new Parameter[this.inputArgs[i]];
 				Uint256DataType paramType = new Uint256DataType();
 				for (int j = 0; j < this.inputArgs[i]; j++) {
@@ -245,7 +246,7 @@ public class EOFHeader {
 		int size = 0;
 		for(int i=0;i<this.code_section_num;i++) {
 			long offset = 0x4000000 + 0x10000 * i;
-			MemoryBlockUtils.createInitializedBlock(program, false, "Container Section "+i ,space.getAddress(offset), fileBytes, index / 2, this.container_section_num, "", "", true, true, true, log);
+			MemoryBlockUtils.createInitializedBlock(program, false, "Container Section "+i ,space.getAddress(offset), fileBytes, index / 2, this.container_section_num, "", "", true, true, false, log);
 			size += this.containerSectionSizes[i];
 		}
 		return index += size;

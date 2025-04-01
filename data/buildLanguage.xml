@@ -39,7 +39,6 @@
 			fork="true"
 			failonerror="true">
 			<jvmarg value="-Xmx2048M"/>
-			<jvmarg value="--version"/>
 			<arg value="-i"/>
 			<arg value="sleighArgs.txt"/>
 			<arg value="-a"/>
