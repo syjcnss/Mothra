@@ -9,3 +9,4 @@ dist/*
 .antProperties.xml
 bin/ghidrevm
 lib/
+bin/*

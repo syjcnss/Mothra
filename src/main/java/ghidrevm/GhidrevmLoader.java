@@ -1,157 +1,184 @@
-/* ###
- * IP: GHIDRA
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * 
- *      http://www.apache.org/licenses/LICENSE-2.0
- * 
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package ghidrevm;
+// /* ###
+//  * IP: GHIDRA
+//  *
+//  * Licensed under the Apache License, Version 2.0 (the "License");
+//  * you may not use this file except in compliance with the License.
+//  * You may obtain a copy of the License at
+//  * 
+//  *      http://www.apache.org/licenses/LICENSE-2.0
+//  * 
+//  * Unless required by applicable law or agreed to in writing, software
+//  * distributed under the License is distributed on an "AS IS" BASIS,
+//  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  * See the License for the specific language governing permissions and
+//  * limitations under the License.
+//  */
+// package ghidrevm;
 
-import java.io.IOException;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+// import java.io.IOException;
+// import java.util.*;
+// import java.util.regex.Matcher;
+// import java.util.regex.Pattern;
 
-import ghidra.app.util.Option;
-import ghidra.app.util.bin.ByteProvider;
-import ghidra.app.util.importer.MessageLog;
-import ghidra.app.util.opinion.AbstractProgramWrapperLoader;
-import ghidra.app.util.opinion.LoadSpec;
-import ghidra.framework.model.DomainObject;
-import ghidra.program.model.listing.Program;
-import ghidra.program.model.lang.LanguageCompilerSpecPair;
-import ghidra.program.flatapi.FlatProgramAPI;
-import ghidra.util.exception.CancelledException;
-import ghidra.util.task.TaskMonitor;
-import ghidrevm.evm.MetadataObj;
-import ghidrevm.evm.CborDecoder;
-import ghidra.program.model.address.Address;
-import ghidra.program.model.mem.MemoryBlock;
-import ghidra.framework.options.Options;
+// import ghidra.app.util.Option;
+// import ghidra.app.util.bin.ByteProvider;
+// import ghidra.app.util.importer.MessageLog;
+// import ghidra.app.util.opinion.AbstractProgramWrapperLoader;
+// import ghidra.app.util.opinion.LoadSpec;
+// import ghidra.framework.model.DomainObject;
+// import ghidra.program.model.listing.Program;
+// import ghidra.program.model.lang.LanguageCompilerSpecPair;
+// import ghidra.program.flatapi.FlatProgramAPI;
+// import ghidra.util.exception.CancelledException;
+// import ghidra.util.task.TaskMonitor;
+// import ghidrevm.evm.MetadataObj;
+// import ghidrevm.evm.CborDecoder;
+// import ghidrevm.evm.EOFHeader;
+// import ghidra.program.model.address.Address;
+// import ghidra.program.model.mem.MemoryBlock;
+// import ghidra.framework.options.Options;
 
-/**
- * TODO: Provide class-level documentation that describes what this loader does.
- */
-public class GhidrevmLoader extends AbstractProgramWrapperLoader {
+// /**
+//  * TODO: Provide class-level documentation that describes what this loader does.
+//  */
+// public class GhidrevmLoader extends AbstractProgramWrapperLoader {
 
-	boolean isHexCode = false;
-	Integer contractSizeLimit = 24576 * 2;
+// 	boolean isHexCode = false;
+// 	Integer contractSizeLimit = 24576 * 2; // This will increase
 
-	@Override
-	public String getName() {
-		return "EVM loader";
-	}
+// 	@Override
+// 	public String getName() {
+// 		return "EVM loader";
+// 	}
+	
+// 	@Override
+// 	public Collection<LoadSpec> findSupportedLoadSpecs(ByteProvider provider) throws IOException {
+// 	    List<LoadSpec> loadSpecs = new ArrayList<>();
 
-	@Override
-	public Collection<LoadSpec> findSupportedLoadSpecs(ByteProvider provider) throws IOException {
-		List<LoadSpec> loadSpecs = new ArrayList<>();
+// 	    byte[] data = provider.readBytes(0, provider.length());
+// 	    String seq = new String(data, "UTF-8").strip();
+// 	    this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
+	    
+// 	    if (isWithinContractSizeLimit(provider)) {
+// 	    	LanguageCompilerSpecPair compilerSpec = null;
+// 	    	LoadSpec spec = null;
+	    	
+// 	    	if(isEOFCompatible(data)) {
+// 	    		compilerSpec = new LanguageCompilerSpecPair("EVM:256:EOF", "V1");
+// 	    	} else {
+// 	    		compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
+// 	    	}
+// 	    	spec = new LoadSpec(this, 0, compilerSpec, true);
+// 	    	loadSpecs.add(spec);
+// 	    }
+// 	    return loadSpecs;
+// 	}
 
-		byte[] data = provider.readBytes(0, provider.length());
-		String seq = new String(data, "UTF-8").strip();
-		this.isHexCode = seq.matches("^[0-9A-Fa-f]+$");
+// 	@Override
+// 	protected void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
+// 			Program program, TaskMonitor monitor, MessageLog log)
+// 			throws CancelledException, IOException {
 
-		if ((!this.isHexCode && provider.length() <= contractSizeLimit)
-				|| (this.isHexCode && provider.length() <= contractSizeLimit * 2)) {
-			LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
-			LoadSpec loadSpec = new LoadSpec(this, 0, compilerSpec, true);
-			loadSpecs.add(loadSpec);
-		}
+// 		monitor.setMessage("EVM: Start Loading...");
+// 		FlatProgramAPI flatAPI = new FlatProgramAPI(program);
 
-		return loadSpecs;
-	}
+// 		Address addr = flatAPI.toAddr(0x0);
+// 		byte[] data = provider.readBytes(0, provider.length());
+// 		CharSequence seq = new String(data, "UTF-8");
 
-	@Override
-	protected void load(ByteProvider provider, LoadSpec loadSpec, List<Option> options,
-			Program program, TaskMonitor monitor, MessageLog log)
-			throws CancelledException, IOException {
+// 		MemoryBlock block;
 
-		monitor.setMessage("EVM: Start Loading...");
-		FlatProgramAPI flatAPI = new FlatProgramAPI(program);
+// 		if (this.isHexCode) {
+// 			Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
+// 			Matcher m = p.matcher(seq);
 
-		Address addr = flatAPI.toAddr(0x0);
-		byte[] data = provider.readBytes(0, provider.length());
-		CharSequence seq = new String(data, "UTF-8");
+// 			int count = (int) m.results().count();
+// 			m.reset();
 
-		MemoryBlock block;
+// 			byte[] byte_code = new byte[count];
 
-		if (this.isHexCode) {
-			Pattern p = Pattern.compile("[0-9a-fA-F]{2}");
-			Matcher m = p.matcher(seq);
+// 			int i = 0;
+// 			while (m.find()) {
+// 				String hex_digit = m.group();
+// 				byte_code[i++] = (byte) Integer.parseInt(hex_digit, 16);
+// 			}
+// 			data = byte_code;
+// 		}
 
-			int count = (int) m.results().count();
-			m.reset();
+// 		try {
+// 			block = flatAPI.createMemoryBlock("code", addr, data, false);
 
-			byte[] byte_code = new byte[count];
+// 			block.setRead(true);
+// 			block.setWrite(false);
+// 			block.setExecute(true);
 
-			int i = 0;
-			while (m.find()) {
-				String hex_digit = m.group();
-				byte_code[i++] = (byte) Integer.parseInt(hex_digit, 16);
-			}
-			data = byte_code;
-		}
+// 			flatAPI.addEntryPoint(addr);
+// 		} catch (Exception e) {
+// 			e.printStackTrace();
+// 			throw new IOException("EVM Code: Fail Loading...");
+// 		}
 
-		try {
-			block = flatAPI.createMemoryBlock("code", addr, data, false);
+// 		if(isEOFCompatible(data)) {
+// 			EOFHeader header = new EOFHeader(data);
+// 			header.decodeEOFHeader();
+			
+// 			Options props = program.getOptions(program.PROGRAM_INFO);
+// 			props.setString("EOF Version", String.valueOf(header.getVersion()));
+// 			props.setString("Type Section Size", String.valueOf(header.getTypeSize()));
+// 			props.setString("Code Section Num", String.valueOf(header.getCodeSectionNum()));
+// 			props.setString("Container Section Num", String.valueOf(header.getContainerSectionNum()));
+// 			props.setString("Data Section Size", String.valueOf(header.getDataSectionNum()));
+// 		} else {
+// 			try {
+// 				// Metadata Decode
+// 				MetadataObj metadata = new MetadataObj(data);
+// 				metadata.decodeMetadata();
 
-			block.setRead(true);
-			block.setWrite(false);
-			block.setExecute(true);
+// 				// Metadata Configuration
+// 				Options props = program.getOptions(program.PROGRAM_INFO);
 
-			flatAPI.addEntryPoint(addr);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new IOException("EVM Code: Fail Loading...");
-		}
+// 				program.setCompiler(metadata.getSolcVersion());
+// 				props.setString("Solc Version", metadata.getSolcVersion());
+// 				props.setString("IPFS Hash", metadata.getIpfs());
+// 				props.setString("bzzr0", metadata.getBzzr0());
+// 				props.setString("bzzr1", metadata.getBzzr1());
 
-		try {
-			// Metadata Decode
-			MetadataObj metadata = new MetadataObj(data);
-			metadata.decodeMetadata();
+// 				new CborDecoder(flatAPI, metadata.getStartIndex(), metadata.getMetadataByteCode());
 
-			// Metadata Configuration
-			Options props = program.getOptions(program.PROGRAM_INFO);
+// 				Address a = flatAPI.toAddr(data.length - 2);
+// 				flatAPI.createWord(a);
+// 				flatAPI.setEOLComment(a, "Metadata Length");
 
-			program.setCompiler(metadata.getSolcVersion());
-			props.setString("Solc Version", metadata.getSolcVersion());
-			props.setString("IPFS Hash", metadata.getIpfs());
-			props.setString("bzzr0", metadata.getBzzr0());
-			props.setString("bzzr1", metadata.getBzzr1());
+// 			} catch (Exception e) {
+// 				e.printStackTrace();
+// 				throw new IOException("EVM Code: Metadata Decode Fails...");
+// 			}
+// 		}
 
-			new CborDecoder(flatAPI, metadata.getStartIndex(), metadata.getMetadataByteCode());
+// 		// End Loading
+// 		monitor.setMessage("EVM Code: End Loading...");
+// 	}
+	
+// 	private boolean isWithinContractSizeLimit(ByteProvider provider) throws IOException {
+// 	    return (!this.isHexCode && provider.length() <= contractSizeLimit)
+// 	            || (this.isHexCode && provider.length() <= contractSizeLimit * 2);
+// 	}
 
-			Address a = flatAPI.toAddr(data.length - 2);
-			flatAPI.createWord(a);
-			flatAPI.setEOLComment(a, "Metadata Length");
+// 	private boolean isEOFCompatible(byte[] data) {
+// 	    return (data.length >= 2) && (data[0] & 0xFF) == 0xEF && (data[1] & 0xFF) == 0x00;
+// 	}
 
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new IOException("EVM Code: Metadata Decode Fails...");
-		}
+// 	@Override
+// 	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
+// 			DomainObject domainObject, boolean isLoadIntoProgram) {
+// 		List<Option> list = super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram);
 
-		// End Loading
-		monitor.setMessage("EVM Code: End Loading...");
-	}
+// 		return list;
+// 	}
 
-	@Override
-	public List<Option> getDefaultOptions(ByteProvider provider, LoadSpec loadSpec,
-			DomainObject domainObject, boolean isLoadIntoProgram) {
-		List<Option> list = super.getDefaultOptions(provider, loadSpec, domainObject, isLoadIntoProgram);
+// 	@Override
+// 	public String validateOptions(ByteProvider provider, LoadSpec loadSpec, List<Option> options, Program program) {
 
-		return list;
-	}
-
-	@Override
-	public String validateOptions(ByteProvider provider, LoadSpec loadSpec, List<Option> options, Program program) {
-
-		return super.validateOptions(provider, loadSpec, options, program);
-	}
-}
+// 		return super.validateOptions(provider, loadSpec, options, program);
+// 	}
+// }

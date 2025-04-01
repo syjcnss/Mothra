@@ -5,16 +5,11 @@
 <processor_spec>
   <programcounter register="PC"/>
   <default_symbols>
-    <symbol name="entry" address="code:0x0000" type="code" entry="true"/>
+    <symbol name="entry" address="code:0x10000" type="code" entry="true"/>
   </default_symbols>
-  <data_space space="code"/>
   <properties>
     <property key="DisableAllAnalyzers" value="value ignored, just turns them off"/>
     <property key="Analyzers.Basic Constant Reference Analyzer" value="true"/>
     <property key="Analyzers.EVM Disassembler" value="true"/>
-    <property key="Analyzers.EVM Function Analyzer" value="true"/>
-    <property key="Analyzers.Function Selector Analyzer" value="true"/>
-    <property key="Analyzers.EVM Bit Extend Analyzer" value="true"/>
-    <property key="Analyzers.Internal Function Arguments Analyzer" value="true"/>
   </properties>
 </processor_spec>
