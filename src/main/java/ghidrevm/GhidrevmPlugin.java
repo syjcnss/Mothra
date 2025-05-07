@@ -68,6 +68,8 @@ import ghidra.program.model.lang.LanguageCompilerSpecPair;
 import ghidra.util.HelpLocation;
 import ghidra.util.task.ConsoleTaskMonitor;
 import ghidra.util.task.TaskMonitor;
+import ghidrevm.loader.EVMLoader;
+import ghidrevm.loader.EOFLoader;
 
 //@formatter:off
 @PluginInfo(
@@ -105,7 +107,7 @@ public class GhidrevmPlugin extends Plugin
 			HelpLocation help = new HelpLocation("ImporterPlugin", "Project_Tree");
 
 			options.registerOption(SIMPLE_UNPACK_OPTION, SIMPLE_UNPACK_OPTION_DEFAULT, help,
-					"Perform simple unpack when any packed DB file is imported");
+				"Perform simple unpack when any packed DB file is imported");
 		}
 
 		setupDownloadBytecodeAction();
@@ -143,8 +145,9 @@ public class GhidrevmPlugin extends Plugin
 				showDownloadBytecodeDialog();
 			}
 		};
-		downloadBytecodeAction.setMenuBarData(new MenuData(new String[] { "&File", "Download ByteCode" }, null,
-				"Import", MenuData.NO_MNEMONIC, "1"));
+		downloadBytecodeAction
+				.setMenuBarData(new MenuData(new String[] { "&File", "Download ByteCode" }, null,
+					"Import", MenuData.NO_MNEMONIC, "1"));
 		downloadBytecodeAction.setKeyBindingData(null);
 		downloadBytecodeAction.setEnabled(true);
 		downloadBytecodeAction.markHelpUnnecessary();
@@ -170,10 +173,12 @@ public class GhidrevmPlugin extends Plugin
 		JTextArea fetchBytecodeOptionTextArea = createTextArea(20, 50);
 
 		// Set up the main content
-		setupMainContent(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+		setupMainContent(dialog, networkOptionsComboBox, filenameTextArea,
+			fetchBytecodeOptionTextArea);
 
 		// Set up the buttons and their actions
-		setupButtonsAndActions(dialog, networkOptionsComboBox, filenameTextArea, fetchBytecodeOptionTextArea);
+		setupButtonsAndActions(dialog, networkOptionsComboBox, filenameTextArea,
+			fetchBytecodeOptionTextArea);
 
 		// Finalize the dialog setup
 		finalizeDialog(dialog);
@@ -199,14 +204,18 @@ public class GhidrevmPlugin extends Plugin
 		return textArea;
 	}
 
-	private void setupMainContent(JDialog dialog, JComboBox<String> networkOptionsComboBox, JTextArea filenameTextArea,
+	private void setupMainContent(JDialog dialog, JComboBox<String> networkOptionsComboBox,
+			JTextArea filenameTextArea,
 			JTextArea fetchBytecodeOptionTextArea) {
 		JPanel mainPanel = new JPanel(new BorderLayout());
 
 		mainPanel.add(createPanel("Network", networkOptionsComboBox), BorderLayout.NORTH);
-		mainPanel.add(createPanel("File Name", new JScrollPane(filenameTextArea)), BorderLayout.CENTER);
-		mainPanel.add(createPanel("Deployed Bytecode / Contract Address", new JScrollPane(fetchBytecodeOptionTextArea)),
-				BorderLayout.SOUTH);
+		mainPanel.add(createPanel("File Name", new JScrollPane(filenameTextArea)),
+			BorderLayout.CENTER);
+		mainPanel.add(
+			createPanel("Deployed Bytecode / Contract Address",
+				new JScrollPane(fetchBytecodeOptionTextArea)),
+			BorderLayout.SOUTH);
 
 		dialog.add(mainPanel, BorderLayout.CENTER);
 	}
@@ -239,8 +248,10 @@ public class GhidrevmPlugin extends Plugin
 		loadByAddressButton.addActionListener(e -> {
 			dialog.dispose();
 			String selectedNetwork = (String) networkOptionsComboBox.getSelectedItem();
-			String rpcEndpoint = rpcNodeLinks.getOrDefault(selectedNetwork, filenameTextArea.getText());
-			fetchContractBytecode(rpcEndpoint, fetchBytecodeOptionTextArea.getText(), filenameTextArea.getText());
+			String rpcEndpoint =
+				rpcNodeLinks.getOrDefault(selectedNetwork, filenameTextArea.getText());
+			fetchContractBytecode(rpcEndpoint, fetchBytecodeOptionTextArea.getText(),
+				filenameTextArea.getText());
 		});
 	}
 
@@ -259,15 +270,18 @@ public class GhidrevmPlugin extends Plugin
 		dialog.setVisible(true);
 	}
 
-	private void fetchContractBytecode(String rpcEndpoint, String contractAddress, String filename) {
+	private void fetchContractBytecode(String rpcEndpoint, String contractAddress,
+			String filename) {
 		// Set up the web3j service
 		String errorTitle = "Failed to fetch bytecode";
-		String errorMessage = "The fetched bytecode is null or empty. Please check the contract address and try again.";
+		String errorMessage =
+			"The fetched bytecode is null or empty. Please check the contract address and try again.";
 		Web3j web3j = Web3j.build(new HttpService(rpcEndpoint));
 
 		try {
 			// Fetch the contract bytecode.
-			EthGetCode ethGetCode = web3j.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST).send();
+			EthGetCode ethGetCode =
+				web3j.ethGetCode(contractAddress, DefaultBlockParameterName.LATEST).send();
 			String bytecode = ethGetCode.getCode();
 
 			if (bytecode == null || bytecode.isEmpty())
@@ -275,7 +289,8 @@ public class GhidrevmPlugin extends Plugin
 			else
 				loadBytecode(bytecode, filename);
 
-		} catch (IOException e) {
+		}
+		catch (IOException e) {
 			e.printStackTrace();
 			showErrorPopup(errorTitle, errorMessage);
 		}
@@ -291,14 +306,29 @@ public class GhidrevmPlugin extends Plugin
 		String fullFilename = appendSuffix(filename, ".evm");
 		try {
 			// Set up the loader and load specification
-			GhidrevmLoader loader = new GhidrevmLoader();
-			LoadSpec loadSpec = configureLoadSpec(loader, "evm:256:default", "default");
+			LanguageCompilerSpecPair compilerSpec = null;
+			LoadSpec loadSpec = null;
+			if (!isEOFCompatible(cleanedBytecode)) {
+				EVMLoader loader = new EVMLoader();
+				compilerSpec = new LanguageCompilerSpecPair("evm:256:default", "default");
+				loadSpec = new LoadSpec(loader, 0, compilerSpec, true);
+			}
+			else {
+				EOFLoader loader = new EOFLoader();
+				compilerSpec = new LanguageCompilerSpecPair("EVM:256:EOF", "V1");
+				loadSpec = new LoadSpec(loader, 0, compilerSpec, true);
+			}
 
 			// Load the bytecode using the custom loader
 			loadAndSaveBytecode(cleanedBytecode, fullFilename, loadSpec);
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	private boolean isEOFCompatible(String data) {
+		return (data.length() >= 2) && (data.startsWith("ef00"));
 	}
 
 	private String removePrefix(String input, String prefix) {
@@ -309,19 +339,16 @@ public class GhidrevmPlugin extends Plugin
 		return input.endsWith(suffix) ? input : input + suffix;
 	}
 
-	private LoadSpec configureLoadSpec(GhidrevmLoader loader, String languageSpec, String compilerSpecId) {
-		LanguageCompilerSpecPair compilerSpec = new LanguageCompilerSpecPair(languageSpec, compilerSpecId);
-		return new LoadSpec(loader, 0, compilerSpec, true);
-	}
-
-	private void loadAndSaveBytecode(String bytecode, String filename, LoadSpec loadSpec) throws Exception {
+	private void loadAndSaveBytecode(String bytecode, String filename, LoadSpec loadSpec)
+			throws Exception {
 		ByteProvider provider = new ByteArrayProvider(hexStringToByteArray(bytecode));
 		Project project = AppInfo.getActiveProject();
 		Object consumer = new Object();
 		TaskMonitor monitor = new ConsoleTaskMonitor();
 
-		LoadResults<? extends DomainObject> results = loadSpec.getLoader().load(provider, filename, project, "",
-				loadSpec, new ArrayList<>(), new MessageLog(), consumer, monitor);
+		LoadResults<? extends DomainObject> results = loadSpec.getLoader()
+				.load(provider, filename, project, "",
+					loadSpec, new ArrayList<>(), new MessageLog(), consumer, monitor);
 
 		// Save the loading results to the project
 		results.save(project, consumer, null, monitor);
