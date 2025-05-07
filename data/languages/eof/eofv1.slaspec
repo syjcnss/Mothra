@@ -1,0 +1,1120 @@
+################################################################
+####################  specification  ###########################
+################################################################
+
+define endian=big;
+define alignment=1;
+
+define space ram type=ram_space size=8 default;
+define space stk      type=ram_space      size=2       wordsize=8; ## Stack
+define space rstk     type=ram_space      size=8       wordsize=1; ## Return Stack (Program Counter)
+
+define space register type=register_space size=2;
+
+## [Stack Pointer, Return Stack Pointer]
+define register offset=0x00 size=2    [SP];
+define register offset=0x02 size=8    [RSP];
+## [Program Counter]
+define register offset=0x0A size=8 [PC];
+define register offset=0x12 size=32   [r0 r1 r2 r3 r4 r5 r6 r7];
+
+define token opcode (8) op = (0,7);
+
+define token data8  (8)  imm8  = (0,7)  hex;
+define token data16 (16) imm16 = (0,15) hex simm16=(0,15) signed;
+define token data24 (24) imm24 = (0,23) hex;
+define token data32 (32) imm32 = (0,31) hex;
+define token data40 (40) imm40 = (0,39) hex;
+define token data48 (48) imm48 = (0,47) hex;
+define token data56 (56) imm56 = (0,55) hex;
+define token data64 (64) imm64 = (0,63) hex;
+define token data64_x (64) imm64_x = (0,63) hex;
+define token data64_y (64) imm64_y = (0,63) hex;
+define token data64_z (64) imm64_z = (0,63) hex;
+
+################################################################
+#########################  macro  ##############################
+################################################################
+
+## Push to stack
+macro push(x) {
+	SP = SP - 4;
+	*[stk] SP = x;
+}
+
+## Pop from stack
+macro pop(x) {
+	x = *[stk] SP;
+	SP = SP + 4;
+}
+
+## Push to return stack (Program Counter)
+macro rpush(x) {
+    RSP = RSP - 8;
+    *[rstk] RSP = x;
+}
+
+## Pop from return stack (Code Section)
+macro rpop(x) {
+    x = *[rstk] RSP;
+    RSP = RSP + 8;
+}
+
+macro halt() {
+	<loop>
+	  SP = SP;
+	  goto <loop>;
+}
+
+################################################################
+########################  Opcode  ##############################
+################################################################
+
+######################  section 0x00  ##########################
+
+define pcodeop _stop;
+:STOP is op=0x00 {
+    _stop();
+    halt();
+}
+
+:ADD is op=0x01 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 + r1;
+    push(r0);
+}
+
+:MUL is op=0x02 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 * r1;
+    push(r0);
+}
+
+:SUB is op=0x03 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 - r1;
+    push(r0);
+}
+
+:DIV is op=0x04 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 / r1;
+    push(r0);
+}
+
+:SDIV is op=0x05 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 s/ r1;
+    push(r0);
+}
+
+:MOD is op=0x06 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 % r1;
+    push(r0);
+}
+
+:SMOD is op=0x07 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 s% r1;
+    push(r0);
+}
+
+:ADDMOD is op=0x08 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    r0 = (r0 + r1) % r2;
+    push(r0);
+}
+
+:MULMOD is op=0x09 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    r0 = (r0 * r1) % r2;
+    push(r0);
+}
+
+define pcodeop _exp;
+:EXP is op=0x0a {
+    pop(r0);
+    pop(r1);
+    # r0 = r0 ^ r1;
+    r0 = _exp(r0, r1);
+    push(r0);
+}
+
+define pcodeop _signext;
+:SIGNEXTEND is op=0x0b {
+    pop(r0);
+    pop(r1);
+    r0 = _signext(r0, r1);
+    push(r0);
+}
+
+######################  section 0x10  ##########################
+
+:LT is op=0x10 {
+    pop(r0);
+    pop(r1);
+    r0 = zext(r0 < r1);
+    push(r0);
+}
+
+:GT is op=0x11 {
+    pop(r0);
+    pop(r1);
+    r0 = zext(r0 > r1);
+    push(r0);
+}
+
+:SLT is op=0x12 {
+    pop(r0);
+    pop(r1);
+    r0 = zext(r0 s< r1);
+    push(r0);
+}
+
+:SGT is op=0x13 {
+    pop(r0);
+    pop(r1);
+    r0 = zext(r0 s> r1);
+    push(r0);
+}
+
+:EQ is op=0x14 {
+    pop(r0);
+    pop(r1);
+    r0 = zext(r0 == r1);
+    push(r0);
+}
+
+:ISZERO is op=0x15 {
+    pop(r0);
+    r0 = zext(r0 == 0);
+    push(r0);
+}
+
+:AND is op=0x16 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 & r1;
+    push(r0);
+}
+
+:OR is op=0x17 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 | r1;
+    push(r0);
+}
+
+:XOR is op=0x18 {
+    pop(r0);
+    pop(r1);
+    r0 = r0 ^ r1;
+    push(r0);
+}
+
+:NOT is op=0x19 {
+    pop(r0);
+    r0 = ~r0;
+    push(r0);
+}
+
+:BYTE is op=0x1a {
+    pop(r0);
+    pop(r1);
+    r0 = (r1 >> (r0 * 8)) & 0xff;
+    push(r0);
+}
+
+:SHL is op=0x1b {
+    pop(r0);
+    pop(r1);
+    r0 = r1 << r0;
+    push(r0);
+}
+
+:SHR is op=0x1c {
+    pop(r0);
+    pop(r1);
+    r0 = r1 >> r0;
+    push(r0);
+}
+
+:SAR is op=0x1d {
+    pop(r0);
+    pop(r1);
+    r0 = r1 s>> r0;
+    push(r0);
+}
+
+######################  section 0x20  ##########################
+
+define pcodeop _sha3;
+:SHA3 is op=0x20 {
+    pop(r0);
+    pop(r1);
+    r0 = _sha3(r0, r1);
+    push(r0);
+}
+
+######################  section 0x30  ##########################
+
+define pcodeop _address;
+:ADDRESS is op=0x30 {
+    r0 = _address();
+    push(r0);
+}
+
+define pcodeop _balance;
+:BALANCE is op=0x31 {
+    pop(r0);
+    r0 = _balance(r0);
+    push(r0);
+}
+
+define pcodeop _origin;
+:ORIGIN is op=0x32 {
+    r0 = _origin();
+    push(r0);
+}
+
+define pcodeop _caller;
+:CALLER is op=0x33 {
+    r0 = _caller();
+    push(r0);
+}
+
+define pcodeop _callvalue;
+:CALLVALUE is op=0x34 {
+    r0 = _callvalue();
+    push(r0);
+}
+
+define pcodeop _calldataload;
+:CALLDATALOAD is op=0x35 {
+    pop(r0);
+    r0 = _calldataload(r0);
+    push(r0);
+}
+
+define pcodeop _calldatasize;
+:CALLDATASIZE is op=0x36 {
+    r0 = _calldatasize();
+    push(r0);
+}
+
+define pcodeop _calldatacopy;
+:CALLDATACOPY is op=0x37 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _calldatacopy(r0, r1, r2);
+}
+
+define pcodeop _gasprice;
+:GASPRICE is op=0x3a {
+    r0 = _gasprice();
+    push(r0);
+}
+
+define pcodeop _returndatasize;
+:RETURNDATASIZE is op=0x3d {
+    r0 = _returndatasize();
+    push(r0);
+}
+
+define pcodeop _returndatacopy;
+:RETURNDATACOPY is op=0x3e {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _returndatacopy(r0, r1, r2);
+}
+
+######################  section 0x40  ##########################
+
+define pcodeop _blockhash;
+:BLOCKHASH is op=0x40 {
+    pop(r0);
+    r0 = _blockhash(r0);
+    push(r0);
+}
+
+define pcodeop _coinbase;
+:COINBASE is op=0x41 {
+    r0 = _coinbase();
+    push(r0);
+}
+
+define pcodeop _timestamp;
+:TIMESTAMP is op=0x42 {
+    r0 = _timestamp();
+    push(r0);
+}
+
+define pcodeop _number;
+:NUMBER is op=0x43 {
+    r0 = _number();
+    push(r0);
+}
+
+define pcodeop _difficulty;
+:DIFFICULTY is op=0x44 {
+    r0 = _difficulty();
+    push(r0);
+}
+
+define pcodeop _gaslimit;
+:GASLIMIT is op=0x45 {
+    r0 = _gaslimit();
+    push(r0);
+}
+
+define pcodeop _chainid;
+:CHAINID is op=0x46 {
+    r0 = _chainid();
+    push(r0);
+}
+
+define pcodeop _selfbalance;
+:SELFBALANCE is op=0x47 {
+    r0 = _selfbalance();
+    push(r0);
+}
+
+define pcodeop _basefee;
+:BASEFEE is op=0x48 {
+    r0 = _basefee();
+    push(r0);
+}
+
+define pcodeop _blobhash;
+:BLOBHASH is op=0x49 {
+	pop(r0);
+	r0 = _blobhash(r0);
+	push(r0);
+}
+
+define pcodeop _blobbasefee;
+:BLOBBASEFEE is op=0x4a {
+	r0 = _blobbasefee();
+	push(r0);
+}
+
+######################  section 0x50  ##########################
+
+:POP is op=0x50 {
+    SP = SP + 4;
+}
+
+define pcodeop _mload;
+:MLOAD is op=0x51 {
+    pop(r0);
+    r0 = _mload(r0);
+    push(r0);
+}
+
+define pcodeop _mstore;
+:MSTORE is op=0x52 {
+    pop(r0);
+    pop(r1);
+    _mstore(r0, r1);
+}
+
+define pcodeop _mstore8;
+:MSTORE8 is op=0x53 {
+    pop(r0);
+    pop(r1);
+    _mstore8(r0, r1);
+}
+
+define pcodeop _sload;
+
+:SLOAD is op=0x54 {
+    pop(r0);
+    r0 = _sload(r0);
+    push(r0);
+}
+
+define pcodeop _sstore;
+:SSTORE is op=0x55 {
+    pop(r0);
+    pop(r1);
+    _sstore(r0, r1);
+}
+
+:PC is op=0x58 {
+    r0 = inst_next - 1;
+    push(r0);
+}
+
+define pcodeop _msize;
+:MSIZE is op=0x59 {
+    r0 = _msize();
+    push(r0);
+}
+
+define pcodeop noop;
+:NOOP is op=0x5b {
+    # Do nothing
+}
+
+define pcodeop _tload;
+:TLOAD  is op=0x5c {
+    pop(r0);
+    r0 = _tload(r0);
+    push(r0);
+}
+
+define pcodeop _tstore;
+:TSTORE is op=0x5d {
+    pop(r0);
+    pop(r1);
+    _tstore(r0, r1);
+}
+
+define pcodeop _mcopy;
+:MCOPY is op=0x5e {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _mcopy(r0, r1, r2);
+}
+
+:PUSH0 is op=0x5f {
+    r0 = 0;
+    push(r0);
+}
+
+######################  section 0x60  ##########################
+
+:PUSH1 imm8 is op=0x60 ; imm8 {
+    r0 = imm8;
+    push(r0);
+}
+
+:PUSH2 imm16 is op=0x61 ; imm16 {
+    r0 = imm16;
+    push(r0);
+}
+
+:PUSH3 imm24 is op=0x62 ; imm24 {
+    r0 = imm24;
+    push(r0);
+}
+
+:PUSH4 imm32 is op=0x63 ; imm32 {
+    r0 = imm32;
+    push(r0);
+}
+
+:PUSH5 imm40 is op=0x64 ; imm40 {
+    r0 = imm40;
+    push(r0);
+}
+
+:PUSH6 imm48 is op=0x65 ; imm48 {
+    r0 = imm48;
+    push(r0);
+}
+
+:PUSH7 imm56 is op=0x66 ; imm56 {
+    r0 = imm56;
+    push(r0);
+}
+
+:PUSH8 imm64 is op=0x67 ; imm64 {
+    r0 = imm64;
+    push(r0);
+}
+
+:PUSH9 imm8, imm64 is op=0x68 ; imm8 ; imm64 {
+    r0 = imm8 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH10 imm16, imm64 is op=0x69 ; imm16 ; imm64 {
+    r0 = imm16 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH11 imm24, imm64 is op=0x6a ; imm24 ; imm64 {
+    r0 = imm24 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH12 imm32, imm64 is op=0x6b ; imm32 ; imm64 {
+    r0 = imm32 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH13 imm40, imm64 is op=0x6c ; imm40 ; imm64 {
+    r0 = imm40 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH14 imm48, imm64 is op=0x6d ; imm48 ; imm64 {
+    r0 = imm48 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH15 imm56, imm64 is op=0x6e ; imm56 ; imm64 {
+    r0 = imm56 << 64 | imm64;
+    push(r0);
+}
+
+:PUSH16 imm64, imm64_z is op=0x6f ; imm64 ; imm64_z {
+    r0 = imm64 << 64 | imm64_z;
+    push(r0);
+}
+
+######################  section 0x70  ##########################
+
+:PUSH17 imm8, imm64_y, imm64_z is op=0x70 ; imm8 ; imm64_y ; imm64_z {
+    r0 = imm8 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH18 imm16, imm64_y, imm64_z is op=0x71 ; imm16 ; imm64_y ; imm64_z {
+    r0 = imm16 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH19 imm24, imm64_y, imm64_z is op=0x72 ; imm24 ; imm64_y ; imm64_z {
+    r0 = imm24 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH20 imm32, imm64_y, imm64_z is op=0x73 ; imm32 ; imm64_y ; imm64_z {
+    r0 = imm32 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH21 imm40, imm64_y, imm64_z is op=0x74 ; imm40 ; imm64_y ; imm64_z {
+    r0 = imm40 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH22 imm48, imm64_y, imm64_z is op=0x75 ; imm48 ; imm64_y ; imm64_z {
+    r0 = imm48 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH23 imm56, imm64_y, imm64_z is op=0x76 ; imm56 ; imm64_y ; imm64_z {
+    r0 = imm56 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH24 imm64, imm64_y, imm64_z is op=0x77 ; imm64 ; imm64_y ; imm64_z {
+    r0 = imm64 << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH25 imm8, imm64_x, imm64_y, imm64_z is op=0x78 ; imm8 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm8 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH26 imm16, imm64_x, imm64_y, imm64_z is op=0x79 ; imm16 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm16 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH27 imm24, imm64_x, imm64_y, imm64_z is op=0x7a ; imm24 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm24 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH28 imm32, imm64_x, imm64_y, imm64_z is op=0x7b ; imm32 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm32 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH29 imm40, imm64_x, imm64_y, imm64_z is op=0x7c ; imm40 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm40 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH30 imm48, imm64_x, imm64_y, imm64_z is op=0x7d ; imm48 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm48 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH31 imm56, imm64_x, imm64_y, imm64_z is op=0x7e ; imm56 ; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm56 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+:PUSH32 imm64, imm64_x, imm64_y, imm64_z is op=0x7f ; imm64; imm64_x ; imm64_y ; imm64_z {
+    r0 = imm64 << 192 | imm64_x << 128 | imm64_y << 64 | imm64_z;
+    push(r0);
+}
+
+######################  section 0x80  ##########################
+
+:DUP1 is op=0x80 {
+    r0 = *[stk] SP;
+    push(r0);
+}
+
+:DUP2 is op=0x81 {
+    r0 = *[stk] (SP+4);
+    push(r0);
+}
+
+:DUP3 is op=0x82 {
+    r0 = *[stk] (SP+8);
+    push(r0);
+}
+
+:DUP4 is op=0x83 {
+    r0 = *[stk] (SP+12);
+    push(r0);
+}
+
+:DUP5 is op=0x84 {
+    r0 = *[stk] (SP+16);
+    push(r0);
+}
+
+:DUP6 is op=0x85 {
+    r0 = *[stk] (SP+20);
+    push(r0);
+}
+
+:DUP7 is op=0x86 {
+    r0 = *[stk] (SP+24);
+    push(r0);
+}
+
+:DUP8 is op=0x87 {
+    r0 = *[stk] (SP+28);
+    push(r0);
+}
+
+:DUP9 is op=0x88 {
+    r0 = *[stk] (SP+32);
+    push(r0);
+}
+
+:DUP10 is op=0x89 {
+    r0 = *[stk] (SP+36);
+    push(r0);
+}
+
+:DUP11 is op=0x8a {
+    r0 = *[stk] (SP+40);
+    push(r0);
+}
+
+:DUP12 is op=0x8b {
+    r0 = *[stk] (SP+44);
+    push(r0);
+}
+
+:DUP13 is op=0x8c {
+    r0 = *[stk] (SP+48);
+    push(r0);
+}
+
+:DUP14 is op=0x8d {
+    r0 = *[stk] (SP+52);
+    push(r0);
+}
+
+:DUP15 is op=0x8e {
+    r0 = *[stk] (SP+56);
+    push(r0);
+}
+
+:DUP16 is op=0x8f {
+    r0 = *[stk] (SP+60);
+    push(r0);
+}
+
+######################  section 0x90  ##########################
+
+:SWAP1 is op=0x90 {
+    local p = SP + 4;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP2 is op=0x91 {
+    local p = SP + 8;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP3 is op=0x92 {
+    local p = SP + 12;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP4 is op=0x93 {
+    local p = SP + 16;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP5 is op=0x94 {
+    local p = SP + 20;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP6 is op=0x95 {
+    local p = SP + 24;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP7 is op=0x96 {
+    local p = SP + 28;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP8 is op=0x97 {
+    local p = SP + 32;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP9 is op=0x98 {
+    local p = SP + 36;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP10 is op=0x99 {
+    local p = SP + 40;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP11 is op=0x9a {
+    local p = SP + 44;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP12 is op=0x9b {
+    local p = SP + 48;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP13 is op=0x9c {
+    local p = SP + 52;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP14 is op=0x9d {
+    local p = SP + 56;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+:SWAP15 is op=0x9e {
+    local p = SP + 60;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+
+:SWAP16 is op=0x9f {
+    local p = SP + 64;
+    pop(r0);
+    r1 = *[stk] p;
+    *[stk] p = r0;
+    push(r1);
+}
+
+
+######################  section 0xa0  ##########################
+
+define pcodeop _log0;
+:LOG0 is op=0xa0 {
+    pop(r0);
+    pop(r1);
+    _log0(r0, r1);
+}
+
+define pcodeop _log1;
+:LOG1 is op=0xa1 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    _log1(r0, r1, r2);
+}
+
+define pcodeop _log2;
+:LOG2 is op=0xa2 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    pop(r3);
+    _log2(r0, r1, r2, r3);
+}
+
+define pcodeop _log3;
+:LOG3 is op=0xa3 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    pop(r3);
+    pop(r4);
+    _log3(r0, r1, r2, r3, r4);
+}
+
+define pcodeop _log4;
+:LOG4 is op=0xa4 {
+    pop(r0);
+    pop(r1);
+    pop(r2);
+    pop(r3);
+    pop(r4);
+    pop(r5);
+    _log4(r0, r1, r2, r3, r4, r5);
+}
+
+######################  section 0xd0  ##########################
+
+# EOF
+:DATALOAD is op=0xd0 {
+    pop(r0);
+    local raddr:8 = 0x08000000 + r0:8;
+    r1 = *[ram]:8 raddr;
+    push(r1);
+}
+
+# EOF
+:DATALOADN imm16 is op=0xd1; imm16 {
+	local raddr:8 = 0x08000000 + imm16;
+    r1 = *[ram]:8 raddr;
+    push(r1);
+}
+
+# EOF
+define pcodeop _datasize;
+:DATASIZE is op=0xd2 {
+	r0 = _datasize();
+	push(r0);
+}
+
+# EOF
+define pcodeop _datacopy;
+:DATACOPY is op=0xd3 {
+	pop(r0); # mem_offset
+	pop(r1); # offset
+	pop(r2); # size
+    local raddr:8 = 0x08000000 + r1:8;
+    local p:32 = *[ram]:8 raddr;
+	_datacopy(r0, r1, r2);
+}
+
+######################  section 0xe0  ##########################
+rel16: reloc is simm16        [ reloc=inst_next+simm16; ] { export *[ram]:8 reloc; }
+# EOF
+:RJUMP rel16 is op=0xe0; rel16 {
+    goto rel16;
+}
+
+# EOF
+:RJUMPI rel16 is op=0xe1; rel16 {
+    pop(r0);
+    if (r0 != 0) goto rel16;
+}
+
+# EOF
+:RJUMPV imm8 is op=0xe2; imm8 {
+    pop(r0);
+    local index:8 = r0:8 * 2;
+    local raddr:8 = inst_next + index;
+    r2 = *[ram]:2 raddr;
+    r3 = inst_next + (imm8+1) * 2 + r2;
+    goto [r3];
+}
+
+sel16: selector is imm16        [ selector=(imm16+1)*0x10000; ] { export *[ram]:8 selector; }
+
+# EOF
+:CALLF sel16 is op=0xe3; sel16 {
+    rpush(&:8 inst_next);
+    call sel16;
+}
+
+
+# EOF
+:RETF is op=0xe4 {
+    rpop(PC);
+    return [PC];
+}
+
+# EOF
+:JUMPF sel16 is op=0xe5; sel16 {
+    call sel16;
+}
+
+# EOF
+:DUPN imm8 is op=0xe6; imm8 {
+	local offset;
+
+    offset = SP + 4 * imm8;
+
+	r1 = *[stk] offset;
+    push(r1);
+}
+
+# EOF
+:SWAPN imm8 is op=0xe7; imm8 {
+	local p = SP + 4 * imm8;
+
+    pop(r1);
+	*[stk] p = r1;
+
+    r2 = *[stk] p;
+	push(r2);
+}
+
+# EOF
+:EXCHANGE imm8 is op=0xe8; imm8 {
+    local n:2 = imm8 >> 4 + 1;
+    local m:2 = imm8 & 0xFF;
+    local offset_n:2 = (n + 1) * 4;
+    local offset_m:2 = (n + m + 1) * 4;
+    
+    local p0:2 = SP + offset_n;
+    local p1:2 = SP + offset_m;
+    
+    r0 = *[stk] p0; # (N+1)th item
+    r1 = *[stk] p1; # (N+M+1)th item
+
+    *[stk] p0 = r1;
+    *[stk] p1 = r0;
+}
+
+# EOF
+define pcodeop _eofcreate;
+:EOFCREATE is op=0xec {
+	pop(r0);
+	pop(r1);
+	pop(r2);
+	pop(r3);
+	r4 = _eofcreate(r0, r1, r2, r3);
+	push(r4);
+}
+
+# EOF
+define pcodeop _returncontract;
+:RETURNCONTRACT is op=0xee {
+	pop(r0);
+	pop(r1);
+	_returncontract(r0, r1);
+}
+
+######################  section 0xf0  ##########################
+
+define pcodeop _return;
+:RETURN is op=0xf3 {
+    pop(r0);
+    pop(r1);
+    _return(r0, r1);
+    halt();
+}
+
+define pcodeop _returndataload;
+:RETURNDATALOAD is op=0xf7 {
+	pop(r0);
+	r1 = _returndataload(r0);
+	push(r1);
+}
+
+# EOF
+define pcodeop _extcall;
+:EXTCALL is op=0xf8 {
+	pop(r0);
+	pop(r1);
+	pop(r2);
+	pop(r3);
+	r4 = _extcall(r0, r1, r2, r3);
+	push(r4);
+}
+
+# EOF
+define pcodeop _extdelegatecall;
+:EXTDELEGATECALL is op=0xf {
+	pop(r0);
+	pop(r1);
+	pop(r2);
+	r3 = _extdelegatecall(r0, r1, r2);
+	push(r3);
+}
+
+# EOF
+define pcodeop _extstaticall;
+:EXTSTATICALL is op=0xfb {
+	pop(r0);
+	pop(r1);
+	pop(r2);
+	r3 = _extstaticall(r0, r1, r2);
+	push(r3);
+}
+
+define pcodeop _revert;
+:REVERT is op=0xfd {
+    pop(r0);
+    pop(r1);
+    _revert(r0, r1);
+    halt();
+}
+
+define pcodeop _invalid;
+:INVALID is op=0xfe {
+	_invalid();
+	halt();
+}

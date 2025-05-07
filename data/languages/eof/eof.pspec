@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- See Relax specification: Ghidra/Framework/SoftwareModeling/data/languages/processor_spec.rxg -->
+
+<processor_spec>
+  <programcounter register="PC"/>
+  <default_symbols>
+    <symbol name="entry" address="ram:0x10000" type="code" entry="true"/>
+  </default_symbols>
+  <properties>
+    <property key="DisableAllAnalyzers" value="value ignored, just turns them off"/>
+    <property key="Analyzers.Basic Constant Reference Analyzer" value="true"/>
+    <property key="Analyzers.EVM Disassembler" value="true"/>
+  </properties>
+</processor_spec>
